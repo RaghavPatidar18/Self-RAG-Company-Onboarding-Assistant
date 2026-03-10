@@ -20,7 +20,6 @@ console = Console()
 
 QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "ocr_chunks")
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
-QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 QDRANT_VECTOR_DIMENSION = int(os.getenv("QDRANT_VECTOR_DIMENSION", "384"))
 UPSERT_BATCH_SIZE = int(os.getenv("QDRANT_UPSERT_BATCH_SIZE", "64"))
 DOCS_FOLDER = "./documents"
