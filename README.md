@@ -52,7 +52,7 @@ The system is built around a **LangGraph state machine** that orchestrates a mul
 |---|---|---|
 | **Streamlit UI** | `app.py` | Chat interface, thread management, streaming output |
 | **Graph Builder** | `graph_builder.py` | LangGraph state machine definition and compilation |
-| **Document Indexer** | `index_docs.py` | OCR extraction, chunking, and FAISS index building |
+| **Document Indexer** | `index_docs.py` | OCR extraction, chunking, and Qdrant index building |
 | **Document Reader** | `document_reader.py` | OCR processing for PDF, PPTX, and TXT files |
 | **Database** | `database.py` | PostgreSQL operations for chat threads and messages |
 
@@ -60,7 +60,7 @@ The system is built around a **LangGraph state machine** that orchestrates a mul
 
 1. **User asks a question** → Streamlit UI sends it to the LangGraph app
 2. **`decide_retrieval`** → LLM decides if specialized docs are needed
-3. **If yes → `retrieve`** → FAISS vector search returns top-k chunks
+3. **If yes → `retrieve`** → Qdrant vector search returns top-k chunks
 4. **`is_relevant`** → Each chunk is individually evaluated for relevance
 5. **`generate_from_context`** → LLM answers using only relevant chunks
 6. **`is_sup`** → LLM fact-checks the answer against source context
@@ -78,7 +78,7 @@ The system is built around a **LangGraph state machine** that orchestrates a mul
 | **Orchestration** | LangGraph (StateGraph) |
 | **LLM Framework** | LangChain |
 | **Embeddings** | HuggingFace — `all-MiniLM-L6-v2` |
-| **Vector Store** | FAISS (local, persisted to disk) |
+| **Vector Store** | Qdrant Cloud (REST API) |
 | **OCR Engine** | EasyOCR |
 | **PDF Processing** | pdf2image + Poppler |
 | **PPTX Processing** | python-pptx |
@@ -169,6 +169,14 @@ Create a `.env` file in the project root:
 ```env
 GROQ_API_KEY=your_groq_api_key_here
 
+# Qdrant Cloud (required):
+QDRANT_COLLECTION_NAME=ocr_chunks
+QDRANT_URL=https://your-cluster-id.us-east.aws.cloud.qdrant.io
+QDRANT_API_KEY=your_qdrant_cloud_api_key_here
+# Optional:
+# QDRANT_HTTPS=true
+# QDRANT_TIMEOUT=30
+
 POSTGRES_USER="rag_user"
 POSTGRES_PASSWORD="rag_password"
 POSTGRES_DB="rag_db"
@@ -201,7 +209,7 @@ In the Streamlit sidebar, click **"Index Documents Here"**. The app will:
 - Run EasyOCR on every PDF page and PPTX image
 - Chunk the extracted text (600 tokens, 150 overlap)
 - Embed chunks with `all-MiniLM-L6-v2`
-- Save a FAISS index to `./ocr_index/`
+- Save to Qdrant Cloud collection `ocr_chunks`
 
 You are now ready to query your documents.
 
@@ -229,7 +237,7 @@ An answer can be grounded in context yet still fail to address the user's actual
 ### Problem 4: Poor Query Formulation Limiting Recall
 User questions phrased conversationally ("what do they say about wheat prices?") do not vector-search well.
 
-**Fix:** The `rewrite_question` node reformulates failed queries into dense, keyword-rich search strings optimized for the FAISS index. This gives the retriever a second (and third) chance with a better signal.
+**Fix:** The `rewrite_question` node reformulates failed queries into dense, keyword-rich search strings optimized for the Qdrant index. This gives the retriever a second (and third) chance with a better signal.
 
 ### Problem 5: Standard Text Extraction Missing Visual Content
 PDFs in agricultural reporting often embed charts, tables, and infographics as images. Pure text-based PDF parsing would miss all of this content.

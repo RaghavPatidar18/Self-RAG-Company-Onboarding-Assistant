@@ -73,7 +73,8 @@ def retrieve(state: State):
     if not retriever:
         return {"docs": []}
     q = state.get("retrieval_query") or state["question"]
-    return {"docs": retriever.invoke(q)}
+    docs = retriever.invoke(q)
+    return {"docs": docs}
 
 class RelevanceDecision(BaseModel):
     is_relevant: bool = Field(..., description="True ONLY if document directly relates to the question topic.")
@@ -201,7 +202,7 @@ def build_graph(checkpointer):
     g.add_node("generate_from_context", generate_from_context)
     g.add_node("no_answer_found", no_answer_found)
     g.add_node("is_sup", is_sup)
-    g.add_node("accept_answer", accept_answer)
+    # g.add_node("accept_answer", accept_answer)
     g.add_node("revise_answer", revise_answer)
     g.add_node("is_use", is_use)
     g.add_node("rewrite_question", rewrite_question)
