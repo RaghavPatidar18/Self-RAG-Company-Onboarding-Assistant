@@ -35,6 +35,7 @@ class State(TypedDict):
     retries: int
     isuse: str
     use_reason: str
+    summary: str
 
 # --- 1. Nodes & Edges (Adapted from your code) ---
 class RetrieveDecision(BaseModel):
@@ -59,13 +60,19 @@ def route_after_decide(state: State):
 
 @traceable(name="generate with llm knowledge")
 def generate_direct(state: State):
+    context = state.get("summary", "")
     prompt = ChatPromptTemplate.from_messages([
         ("system", """You are a fresher training assistant for company onboarding.
         Answer the user's question using general professional knowledge.
         If the question requires internal company policy, proprietary process, product details, or compliance specifics that you do not have, politely say 'I don't know' or 'I need company-specific context to answer this'."""),
-        ("human", "{question}")
+        ("human", "Question:\n{question}\nContext:\n{context}")
     ])
-    return {"answer": llm.invoke(prompt.format_messages(question=state["question"])).content}
+    messages = prompt.format_messages(
+        question=state["question"],
+        context=context
+    )
+    response = llm.invoke(messages)
+    return {"answer": response.content}
 
 @traceable(name="retrieve doc")
 def retrieve(state: State):
@@ -84,7 +91,7 @@ def is_relevant(state: State):
     prompt = ChatPromptTemplate.from_messages([
         ("system", """You are evaluating company document relevance for fresher training.
         Assess if the provided document contains information directly relevant to answering the user's onboarding or company-process question.
-        Return JSON with 'is_relevant' (boolean). 
+        Return JSON with 'is_relevant' (boolean).
         Set to True ONLY if the document discusses the specific policy, process, product, team workflow, role expectations, tools, or compliance topics mentioned in the question. False if it is off-topic."""),
         ("human", "Question:\n{question}\n\nDoc:\n{document}")
     ])
@@ -103,7 +110,9 @@ def route_after_relevance(state: State):
 
 @traceable(name="generate_from_context")
 def generate_from_context(state: State):
-    context = "\n\n---\n\n".join([d.page_content for d in state.get("relevant_docs", [])]).strip()
+    summary_context = state.get("summary","")
+    document_context = "\n\n---\n\n".join([d.page_content for d in state.get("relevant_docs", [])]).strip()
+    context = summary_context + document_context
     prompt = ChatPromptTemplate.from_messages([
         ("system", """You are a specialized company training AI assistant.
         Answer the user's question clearly and accurately using ONLY the provided company context. Focus on actionable guidance for freshers and onboarding.
@@ -111,7 +120,7 @@ def generate_from_context(state: State):
         Do not use conversational filler like 'Based on the context provided' or 'According to the documents'."""),
         ("human", "Question:\n{question}\n\nContext:\n{context}")
     ])
-    return {"answer": llm.invoke(prompt.format_messages(question=state["question"], context=context)).content, "context": context}
+    return {"answer": llm.invoke(prompt.format_messages(question=state["question"], context=context)).content, "context": document_context}
 
 @traceable(name="no answer found")
 def no_answer_found(state: State):
@@ -141,8 +150,6 @@ def route_after_issup(state: State):
         return "accept_answer"
     return "revise_answer"
 
-def accept_answer(state: State): return {}
-
 @traceable(name="revise answer")
 def revise_answer(state: State):
     prompt = ChatPromptTemplate.from_messages([
@@ -171,7 +178,7 @@ def is_use(state: State):
 
 @traceable(name="route after usefulness check")
 def route_after_isuse(state: State):
-    if state.get("isuse") == "useful": return "END"
+    if state.get("isuse") == "useful": return "generate_summary"
     if state.get("rewrite_tries", 0) >= 3: return "no_answer_found"
     return "rewrite_question"
 
@@ -192,6 +199,21 @@ def rewrite_question(state: State):
     )
     return {"retrieval_query": decision.retrieval_query, "rewrite_tries": state.get("rewrite_tries", 0) + 1, "docs": [], "relevant_docs": [], "context": ""}
 
+@traceable(name= "generate summary")
+def gen_summary(state: State):
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", """You are a company training AI assistant summarizing the conversation considering important information ONLY.
+        Summarize in short around 50-100 words only by preserving MOST important information from the conversation given below for the Question and Answer provided. 
+        DO NOT summarize long in any condition."""),
+        ("human", "Question:\n{question}\nAnswer:\n{answer}")
+    ])
+    message = prompt.format_messages(
+        question=state.get("retrieval_query") or state.get("question",""),
+        answer=state.get("answer") 
+    )
+    generated_summary = llm.invoke(message)
+    return {"summary": generated_summary.content}
+
 # --- 2. Build and Compile Graph ---
 def build_graph(checkpointer):
     g = StateGraph(State)
@@ -202,21 +224,22 @@ def build_graph(checkpointer):
     g.add_node("generate_from_context", generate_from_context)
     g.add_node("no_answer_found", no_answer_found)
     g.add_node("is_sup", is_sup)
-    # g.add_node("accept_answer", accept_answer)
     g.add_node("revise_answer", revise_answer)
     g.add_node("is_use", is_use)
     g.add_node("rewrite_question", rewrite_question)
+    g.add_node("gen_summary", gen_summary)
 
     g.add_edge(START, "decide_retrieval")
     g.add_conditional_edges("decide_retrieval", route_after_decide, {"generate_direct": "generate_direct", "retrieve": "retrieve"})
-    g.add_edge("generate_direct", END)
+    g.add_edge("generate_direct", "gen_summary")
+    g.add_edge("gen_summary",END)
     g.add_edge("retrieve", "is_relevant")
     g.add_conditional_edges("is_relevant", route_after_relevance, {"generate_from_context": "generate_from_context", "no_answer_found": "no_answer_found"})
     g.add_edge("no_answer_found", END)
     g.add_edge("generate_from_context", "is_sup")
     g.add_conditional_edges("is_sup", route_after_issup, {"accept_answer": "is_use", "revise_answer": "revise_answer"})
     g.add_edge("revise_answer", "is_sup")
-    g.add_conditional_edges("is_use", route_after_isuse, {"END": END, "rewrite_question": "rewrite_question", "no_answer_found": "no_answer_found"})
+    g.add_conditional_edges("is_use", route_after_isuse, {"generate_summary": "gen_summary", "rewrite_question": "rewrite_question", "no_answer_found": "no_answer_found"})
     g.add_edge("rewrite_question", "retrieve")
 
     return g.compile(checkpointer=checkpointer)
