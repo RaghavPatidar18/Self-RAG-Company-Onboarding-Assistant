@@ -6,6 +6,7 @@ from graph_builder import build_graph, pool
 from index_docs import index_all_documents
 from semantic_cache import SemanticCache
 from langgraph.checkpoint.postgres import PostgresSaver
+from langgraph.store.postgres import PostgresStore
 import psycopg
 from database import DB_URI
 
@@ -25,12 +26,19 @@ def setup_environment():
     with psycopg.connect(DB_URI, autocommit=True) as conn:
         setup_checkpointer = PostgresSaver(conn)
         setup_checkpointer.setup() 
+    
+    with psycopg.connect(DB_URI, autocommit=True) as conn:
+        setup_store = PostgresStore(conn)
+        setup_store.setup()
         
     # 2. Instantiate the actual checkpointer for the graph using the connection pool
     checkpointer = PostgresSaver(pool)
+    store = PostgresStore(pool)
+    store.setup()
+
     semantic_cache_threshold = float(os.getenv("SEMANTIC_CACHE_THRESHOLD", "0.88"))
     semantic_cache = SemanticCache(threshold=semantic_cache_threshold)
-    return build_graph(checkpointer), semantic_cache
+    return build_graph(checkpointer,store), semantic_cache
 
 app, semantic_cache = setup_environment()
 
@@ -112,7 +120,7 @@ if prompt := st.chat_input("Ask a question..."):
         "use_reason": "",
     }
     config = {
-        "configurable": {"thread_id": st.session_state.current_thread_id},
+        "configurable": {"thread_id": st.session_state.current_thread_id , "user_id":"12345"},
         "metadata": {
             "thread_id": st.session_state.current_thread_id
         },

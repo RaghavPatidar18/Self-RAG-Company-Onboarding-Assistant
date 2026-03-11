@@ -1,4 +1,5 @@
 import os
+import uuid
 from typing import List, TypedDict, Literal
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
@@ -8,6 +9,9 @@ from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_groq import ChatGroq
 from langgraph.graph import StateGraph, START, END
+from langchain_core.runnables import RunnableConfig
+from langgraph.store.base import BaseStore
+from langchain_core.messages import SystemMessage
 
 from langsmith import traceable
 
@@ -40,6 +44,28 @@ class State(TypedDict):
 # --- 1. Nodes & Edges (Adapted from your code) ---
 class RetrieveDecision(BaseModel):
     should_retrieve: bool = Field(..., description="True if external documents are needed.")
+
+class MemoryItem(BaseModel):
+    text: str = Field(description="Atomic user memory")
+    is_new: bool = Field(description="True if new, false if duplicate")
+
+class MemoryDecision(BaseModel):
+    should_write: bool
+    memories: List[MemoryItem] = Field(default_factory=list)
+
+class RelevanceDecision(BaseModel):
+    is_relevant: bool = Field(..., description="True ONLY if document directly relates to the question topic.")
+
+class IsUSEDecision(BaseModel):
+    isuse: Literal["useful", "not_useful"]
+    reason: str
+
+class IsSUPDecision(BaseModel):
+    issup: Literal["fully_supported", "partially_supported", "no_support"]
+    evidence: List[str] = Field(default_factory=list)
+
+class RewriteDecision(BaseModel):
+    retrieval_query: str
 
 @traceable(name="decide_retrival")
 def decide_retrieval(state: State):
@@ -74,6 +100,44 @@ def generate_direct(state: State):
     response = llm.invoke(messages)
     return {"answer": response.content}
 
+@traceable(name="generate_from_context")
+def generate_from_context(state: State, config: RunnableConfig, *, store: BaseStore):
+
+    user_id = config["configurable"]["user_id"]
+    path_id = ("user", user_id, "details")
+
+    items = store.search(path_id)
+    user_details = "\n".join(it.value.get("data", "") for it in items) if items else ""
+
+    summary_context = state.get("summary","")
+    document_context = "\n\n---\n\n".join([d.page_content for d in state.get("relevant_docs", [])]).strip()
+    context = "\n".join([user_details, summary_context, document_context])
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", """You are a specialized company training AI assistant.
+        Answer the user's question clearly and accurately using ONLY the provided company context. Focus on actionable guidance for freshers and onboarding.
+        Do not use outside knowledge. If the context does not contain the answer, state that clearly. 
+        Do not use conversational filler like 'Based on the context provided' or 'According to the documents'.
+         
+        If user-specific memory is available, use it to personalize 
+        your responses based on what you know about the user.
+
+        Your goal is to provide relevant, friendly, and tailored 
+        assistance that reflects the user’s preferences, context, and past interactions.
+
+        If the user’s name or relevant personal context is available, always personalize your responses by:
+            – Always Address the user by name (e.g., "Sure, Raghav...") when appropriate
+            – Adjusting the tone to feel friendly, natural, and directly aimed at the user
+
+        Avoid generic phrasing when personalization is possible.
+
+        Use personalization especially in:
+            – Greetings and transitions
+            – Help or guidance tailored to tools and frameworks the user uses
+            – Follow-up messages that continue from past context"""),
+        ("human", "Question:\n{question}\n\nContext:\n{context}")
+    ])
+    return {"answer": llm.invoke(prompt.format_messages(question=state["question"], context=context)).content, "context": document_context}
+
 @traceable(name="retrieve doc")
 def retrieve(state: State):
     retriever = get_retriever()
@@ -82,9 +146,6 @@ def retrieve(state: State):
     q = state.get("retrieval_query") or state["question"]
     docs = retriever.invoke(q)
     return {"docs": docs}
-
-class RelevanceDecision(BaseModel):
-    is_relevant: bool = Field(..., description="True ONLY if document directly relates to the question topic.")
 
 @traceable(name="is relevant")
 def is_relevant(state: State):
@@ -108,27 +169,9 @@ def is_relevant(state: State):
 def route_after_relevance(state: State):
     return "generate_from_context" if state.get("relevant_docs") else "no_answer_found"
 
-@traceable(name="generate_from_context")
-def generate_from_context(state: State):
-    summary_context = state.get("summary","")
-    document_context = "\n\n---\n\n".join([d.page_content for d in state.get("relevant_docs", [])]).strip()
-    context = summary_context + document_context
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", """You are a specialized company training AI assistant.
-        Answer the user's question clearly and accurately using ONLY the provided company context. Focus on actionable guidance for freshers and onboarding.
-        Do not use outside knowledge. If the context does not contain the answer, state that clearly. 
-        Do not use conversational filler like 'Based on the context provided' or 'According to the documents'."""),
-        ("human", "Question:\n{question}\n\nContext:\n{context}")
-    ])
-    return {"answer": llm.invoke(prompt.format_messages(question=state["question"], context=context)).content, "context": document_context}
-
 @traceable(name="no answer found")
 def no_answer_found(state: State):
     return {"answer": "No answer found in the knowledge base.", "context": ""}
-
-class IsSUPDecision(BaseModel):
-    issup: Literal["fully_supported", "partially_supported", "no_support"]
-    evidence: List[str] = Field(default_factory=list)
 
 @traceable(name="is supporting")
 def is_sup(state: State):
@@ -160,10 +203,6 @@ def revise_answer(state: State):
     ])
     return {"answer": llm.invoke(prompt.format_messages(question=state["question"], answer=state.get("answer",""), context=state.get("context",""))).content, "retries": state.get("retries", 0) + 1}
 
-class IsUSEDecision(BaseModel):
-    isuse: Literal["useful", "not_useful"]
-    reason: str
-
 @traceable(name="is usefull answer")
 def is_use(state: State):
     prompt = ChatPromptTemplate.from_messages([
@@ -181,9 +220,6 @@ def route_after_isuse(state: State):
     if state.get("isuse") == "useful": return "generate_summary"
     if state.get("rewrite_tries", 0) >= 3: return "no_answer_found"
     return "rewrite_question"
-
-class RewriteDecision(BaseModel):
-    retrieval_query: str
 
 @traceable(name="rewrite question")
 def rewrite_question(state: State):
@@ -214,8 +250,49 @@ def gen_summary(state: State):
     generated_summary = llm.invoke(message)
     return {"summary": generated_summary.content}
 
+@traceable(name= "generate/update long term memory")
+def gen_ltm(state: State , config: RunnableConfig ,*, store: BaseStore):
+
+    user_id = config["configurable"]["user_id"]
+    path_id = ("user", user_id, "details")
+    items = store.search(path_id)
+    existing = "\n".join(it.value.get("data", "") for it in items) if items else "(empty)"
+
+    memory_extractor = llm.with_structured_output(MemoryDecision)
+
+    MEMORY_PROMPT = """You are responsible for updating and maintaining accurate user memory.
+
+    CURRENT USER DETAILS (existing memories):
+    {user_details_content}
+
+    TASK:
+    - Review the user's latest message.
+    - Extract user-specific info worth storing long-term (identity, stable preferences, ongoing projects/goals).
+    - For each extracted item, set is_new=true ONLY if it adds NEW information compared to CURRENT USER DETAILS.
+    - If it is basically the same meaning as something already present, set is_new=false.
+    - Keep each memory as a short atomic sentence.
+    - No speculation; only facts stated by the user.
+    - If there is nothing memory-worthy, return should_write=false and an empty list.
+    """
+
+    user_text = state.get("question")
+
+    decision: MemoryDecision = memory_extractor.invoke(
+        [
+            SystemMessage(content=MEMORY_PROMPT.format(user_details_content=existing)),
+            {"role": "user", "content": user_text},
+        ]
+    )
+
+    if decision.should_write:
+        for mem in decision.memories:
+            if mem.is_new and mem.text.strip():
+                store.put(path_id, str(uuid.uuid4()), {"data": mem.text.strip()})
+
+    return {"question": state["question"]}
+
 # --- 2. Build and Compile Graph ---
-def build_graph(checkpointer):
+def build_graph(checkpointer , store):
     g = StateGraph(State)
     g.add_node("decide_retrieval", decide_retrieval)
     g.add_node("generate_direct", generate_direct)
@@ -228,11 +305,13 @@ def build_graph(checkpointer):
     g.add_node("is_use", is_use)
     g.add_node("rewrite_question", rewrite_question)
     g.add_node("gen_summary", gen_summary)
+    g.add_node("gen_ltm",gen_ltm)
 
     g.add_edge(START, "decide_retrieval")
     g.add_conditional_edges("decide_retrieval", route_after_decide, {"generate_direct": "generate_direct", "retrieve": "retrieve"})
     g.add_edge("generate_direct", "gen_summary")
-    g.add_edge("gen_summary",END)
+    g.add_edge("gen_summary","gen_ltm")
+    g.add_edge("gen_ltm",END)
     g.add_edge("retrieve", "is_relevant")
     g.add_conditional_edges("is_relevant", route_after_relevance, {"generate_from_context": "generate_from_context", "no_answer_found": "no_answer_found"})
     g.add_edge("no_answer_found", END)
@@ -242,7 +321,7 @@ def build_graph(checkpointer):
     g.add_conditional_edges("is_use", route_after_isuse, {"generate_summary": "gen_summary", "rewrite_question": "rewrite_question", "no_answer_found": "no_answer_found"})
     g.add_edge("rewrite_question", "retrieve")
 
-    return g.compile(checkpointer=checkpointer)
+    return g.compile(checkpointer=checkpointer , store=store)
 
 # Manage Postgres connection pool for the checkpointer globally
 pool = ConnectionPool(conninfo=DB_URI, max_size=20)
