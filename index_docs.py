@@ -274,7 +274,7 @@ async def index_all_documents_async() -> int:
         return 0
 
     console.print(f"\n[bold]Chunking {len(all_docs)} section(s) into smaller pieces...[/]")
-    splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=150)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=256, chunk_overlap=100)
     chunks = splitter.split_documents(all_docs)
 
     with console.status("[bold green]Upserting chunks into Qdrant..."):
