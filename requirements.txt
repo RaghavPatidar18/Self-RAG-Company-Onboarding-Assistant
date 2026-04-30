@@ -14,6 +14,7 @@ python-pptx==0.6.23
 # Database
 psycopg[binary]>=3.2,<4.0
 psycopg-pool>=3.2,<4.0
+redis>=5.0,<7.0
 
 # LangChain + LangGraph (aligned for langchain-core 0.3.x)
 langchain>=0.3.27,<0.4.0
@@ -30,6 +31,7 @@ langgraph-checkpoint-postgres>=2.0.0,<3.0.0
 # Embedding/model stack
 sentence-transformers>=3.0,<6.0
 transformers>=4.40,<6.0
+# fastembed>=0.3.6,<0.5.0
 
 # Vector database
-qdrant-client==1.17.0
+qdrant-client[fastembed]==1.17.0

@@ -1,4 +1,4 @@
-# Fresher Training RAG: Self-RAG Company Onboarding Assistant
+# Company On-boarding RAG: Self-RAG Company Onboarding Assistant
 
 A production-grade **Self-RAG** chatbot for fresher onboarding and internal knowledge support.  
 It combines retrieval, self-evaluation, short-term memory, long-term memory, and semantic caching to improve answer quality, personalization, and latency.
@@ -8,14 +8,14 @@ It combines retrieval, self-evaluation, short-term memory, long-term memory, and
 ## Latest Architecture
 
 The app is a **LangGraph state machine** with three memory layers:
-- **Short-term memory:** per-thread rolling summary in graph state (`summary`)
-- **Long-term memory:** persistent user facts in `PostgresStore`
-- **Semantic cache:** vector-similarity answer cache for repeated/similar prompts
+- **Short-term memory:** per-session turns in Redis plus a rolling Postgres summary once the session exceeds the turn threshold
+- **Long-term memory:** persistent user facts in PostgreSQL
+- **Semantic cache:** Redis vector-similarity answer cache for repeated/similar prompts
 
 ```text
 User Prompt
    |
-   +--> [Semantic Cache Lookup (Qdrant)] -- hit --> return cached answer
+   +--> [Semantic Cache Lookup (Redis)] -- hit --> return cached answer
    |                                          
    |-- miss --> LangGraph Pipeline ------------------------------------------+
             [decide_retrieval]                                               |
@@ -23,10 +23,10 @@ User Prompt
               +--> [generate_direct]                                          |
               |         |                                                     |
               |         v                                                     |
-              |    [gen_summary]  (short-term memory update)                  |
+              |    [sync_session_memory] (Redis session + summary update)     |
               |         |                                                     |
               |         v                                                     |
-              |    [gen_ltm]      (long-term memory write)                    |
+              |    [write_long_term_memory] (Postgres durable memory)         |
               |         |                                                     |
               |        END                                                    |
               |
@@ -64,7 +64,7 @@ After successful generation:
 |---|---|---|
 | Streamlit UI | `app.py` | Chat UI, thread/session handling, graph streaming |
 | Graph Orchestration | `graph_builder.py` | Self-RAG nodes, routing logic, memory read/write |
-| Semantic Cache | `semantic_cache.py` | Similarity cache using embeddings + Qdrant |
+| Semantic Cache | `semantic_cache.py` | Similarity cache using embeddings + Redis Stack |
 | Document Indexer/Retriever | `index_docs.py` | OCR text chunking, embeddings, Qdrant upsert/query |
 | OCR Reader | `document_reader.py` | PDF/PPTX/TXT extraction (EasyOCR + parsers) |
 | Chat Persistence | `database.py` | `chat_threads` / `chat_messages` Postgres storage |
@@ -74,25 +74,22 @@ After successful generation:
 ## Memory and Cache Layers
 
 ### 1. Short-Term Memory
-- Implemented as `summary` in graph state.
-- `gen_summary` creates a concise summary from the latest Q/A.
-- Next turns can use this summary to keep context continuity inside the active thread.
+- Implemented as Redis-backed per-session turns.
+- Once the session exceeds the configured turn threshold, older turns are summarized and persisted in Postgres.
+- The graph uses both the rolling Postgres summary and the recent Redis transcript on future turns.
 
 ### 2. Long-Term Memory
-- Implemented in `gen_ltm` via `PostgresStore`.
+- Implemented in PostgreSQL via the `long_term_memories` table.
 - Extracts durable user facts (identity, preferences, ongoing goals).
-- Stores atomic memory entries under a user namespace and reuses them in `generate_from_context` for personalization.
+- Stores atomic memory entries with deduplication and reuses them for personalization.
 
 ### 3. Semantic Cache
-- Implemented in `semantic_cache.py`.
-- Embeds incoming question and checks nearest cached question by cosine similarity.
-- Returns cached answer if score is above threshold (`SEMANTIC_CACHE_THRESHOLD`, default `0.88`).
-- On cache miss, normal graph executes; successful answers are then cached.
+- Implemented in Redis Stack with a vector index.
+- Embeds incoming questions and checks the nearest cached question by cosine similarity.
+- Returns cached answers above the configured threshold and keeps cache writes in the same graph flow.
 
-### 4. Qdrant DB ("Quadrant DB" -> Qdrant)
-- Qdrant is used in two places:
-  - **Knowledge base retrieval** (`index_docs.py`) for document chunks.
-  - **Semantic cache storage** (`semantic_cache.py`) for Q/A reuse.
+### 4. Qdrant DB
+- Qdrant is used for the document knowledge base with hybrid dense retrieval.
 
 ---
 
@@ -139,7 +136,7 @@ After successful generation:
 | Vector DB | Qdrant |
 | OCR | EasyOCR |
 | UI | Streamlit |
-| Persistence | PostgreSQL (`psycopg`, `PostgresSaver`, `PostgresStore`) |
+| Persistence | PostgreSQL (`psycopg`, `PostgresSaver`) |
 | Containerization | Docker Compose |
 
 ---
@@ -215,4 +212,3 @@ In sidebar, click **Index Documents Here**.
 5. Summary and long-term memory are updated.
 6. Final answer and messages are persisted.
 7. Answer is added to semantic cache.
-

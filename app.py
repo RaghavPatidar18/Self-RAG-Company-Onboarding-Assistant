@@ -1,51 +1,52 @@
-import streamlit as st
-import uuid
-import time
-from database import init_db, create_thread, get_all_threads, add_message, get_messages
-from graph_builder import build_graph, pool
-from index_docs import index_all_documents
-from semantic_cache import SemanticCache
-from langgraph.checkpoint.postgres import PostgresSaver
-from langgraph.store.postgres import PostgresStore
-import psycopg
-from database import DB_URI
-
-st.set_page_config(page_title="Fresher Training RAG", layout="wide")
-
 import os
+import time
+import uuid
+
+import psycopg
+import streamlit as st
 from dotenv import load_dotenv
+from langgraph.checkpoint.postgres import PostgresSaver
+from psycopg_pool import ConnectionPool
+
+from database import (
+    DB_URI,
+    add_message,
+    create_thread,
+    get_all_threads,
+    get_messages,
+    init_db,
+    update_thread_title,
+)
+from graph_builder import build_graph
+from index_docs import index_all_documents
+from redis_store import RedisSemanticCache, RedisSessionManager
+
+st.set_page_config(page_title="Company On-boarding RAG", layout="wide")
 
 load_dotenv()
 
-# 1. Initialize DB and Graph Checkpointer
-@st.cache_resource # runs only once on server up
+
+@st.cache_resource
 def setup_environment():
     init_db()
-    
-    # 1. Run the LangGraph table migrations using a dedicated autocommit connection
+
     with psycopg.connect(DB_URI, autocommit=True) as conn:
-        setup_checkpointer = PostgresSaver(conn)
-        setup_checkpointer.setup() 
-    
-    with psycopg.connect(DB_URI, autocommit=True) as conn:
-        setup_store = PostgresStore(conn)
-        setup_store.setup()
-        
-    # 2. Instantiate the actual checkpointer for the graph using the connection pool
-    checkpointer = PostgresSaver(pool)
-    store = PostgresStore(pool)
-    store.setup()
+        PostgresSaver(conn).setup()
 
     semantic_cache_threshold = float(os.getenv("SEMANTIC_CACHE_THRESHOLD", "0.88"))
-    semantic_cache = SemanticCache(threshold=semantic_cache_threshold)
-    return build_graph(checkpointer,store), semantic_cache
+    session_manager = RedisSessionManager()
+    semantic_cache = RedisSemanticCache(threshold=semantic_cache_threshold)
+    checkpoint_pool = ConnectionPool(conninfo=DB_URI, max_size=20)
+    checkpointer = PostgresSaver(checkpoint_pool)
+    graph = build_graph(checkpointer, session_manager, semantic_cache)
+    return graph, session_manager, semantic_cache
 
-app, semantic_cache = setup_environment()
 
-# 2. Session State Management — restore from URL so reloads don't create new threads
+app, session_manager, semantic_cache = setup_environment()
+
 if "current_thread_id" not in st.session_state:
     threads = get_all_threads()
-    all_thread_ids = {t[0] for t in threads}
+    all_thread_ids = {thread_id for thread_id, _ in threads}
     url_thread_id = st.query_params.get("thread_id")
     if url_thread_id and url_thread_id in all_thread_ids:
         st.session_state.current_thread_id = url_thread_id
@@ -53,27 +54,23 @@ if "current_thread_id" not in st.session_state:
         st.session_state.current_thread_id = str(uuid.uuid4())
         create_thread(st.session_state.current_thread_id, "New Chat")
 
-# Keep the URL in sync so reloads restore the correct thread
 st.query_params["thread_id"] = st.session_state.current_thread_id
 
-# --- SIDEBAR UI ---
 with st.sidebar:
-    st.header("⚙️ Control Panel")
-    
-    # Index Documents Button
-    if st.button("📥 Index Documents Here", use_container_width=True):
-        with st.spinner("Extracting & Embedding company documents..."):
+    st.header("Control Panel")
+
+    if st.button("Index Documents Here", use_container_width=True):
+        with st.spinner("Extracting and indexing company documents..."):
             chunks_indexed = index_all_documents()
             if chunks_indexed > 0:
-                st.success(f"Successfully indexed {chunks_indexed} chunks!")
+                st.success(f"Successfully indexed {chunks_indexed} chunks.")
             else:
                 st.warning("No supported company documents found in ./documents.")
 
     st.divider()
-    
-    # Thread Management
-    st.subheader("💬 Chat History")
-    if st.button("➕ New Chat", use_container_width=True):
+
+    st.subheader("Chat History")
+    if st.button("New Chat", use_container_width=True):
         st.session_state.current_thread_id = str(uuid.uuid4())
         create_thread(st.session_state.current_thread_id, "New Chat")
         st.query_params["thread_id"] = st.session_state.current_thread_id
@@ -81,30 +78,25 @@ with st.sidebar:
 
     threads = get_all_threads()
     for thread_id, title in threads:
-        btn_label = f"🗨️ {title}" if title != "New Chat" else f"🗨️ Chat {thread_id[:5]}"
+        btn_label = title if title and title != "New Chat" else f"Chat {thread_id[:5]}"
         if st.button(btn_label, key=thread_id, use_container_width=True):
             st.session_state.current_thread_id = thread_id
             st.query_params["thread_id"] = thread_id
             st.rerun()
 
-# --- MAIN CHAT AREA ---
-st.title("Fresher Training RAG")
+st.title("Company On-boarding RAG")
 st.caption(f"Current Session: `{st.session_state.current_thread_id}`")
 
-# Display historical messages from Postgres
 messages = get_messages(st.session_state.current_thread_id)
 for role, content in messages:
     with st.chat_message(role):
         st.markdown(content)
 
-# Handle new user input
 if prompt := st.chat_input("Ask a question..."):
-    # Add User Message
     add_message(st.session_state.current_thread_id, "user", prompt)
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Initial State for Graph Execution
     initial_state = {
         "question": prompt,
         "retrieval_query": "",
@@ -118,69 +110,50 @@ if prompt := st.chat_input("Ask a question..."):
         "retries": 0,
         "isuse": "not_useful",
         "use_reason": "",
+        "cached_answer": "",
+        "cache_score": 0.0,
+        "response_source": "",
     }
     config = {
-        "configurable": {"thread_id": st.session_state.current_thread_id , "user_id":"12345"},
-        "metadata": {
-            "thread_id": st.session_state.current_thread_id
+        "configurable": {
+            "thread_id": st.session_state.current_thread_id,
+            "user_id": "12345",
         },
+        "metadata": {"thread_id": st.session_state.current_thread_id},
         "run_name": "chat_turn",
-        }
+    }
 
     final_answer = ""
-    cache_hit = None
-    try:
-        cache_hit = semantic_cache.get(prompt)
-    except Exception:
-        cache_hit = None
+    cache_score = 0.0
+    response_source = ""
 
-    # Cache-first response path
-    if cache_hit:
-        cached_answer, cached_score = cache_hit
-        final_answer = cached_answer
-        with st.chat_message("assistant"):
-            st.caption(f"Semantic cache hit (score: {cached_score:.3f})")
-            st.markdown(final_answer)
-    else:
-        # Stream the Graph Response
-        with st.chat_message("assistant"):
-            # We use st.status to neatly tuck away LangGraph's processing states
-            with st.status("Thinking...", expanded=True) as status:
-                # Stream mode 'updates' allows us to peek into the nodes being executed
-                for event in app.stream(initial_state, config=config, stream_mode="updates"):
-                    for node_name, state_update in event.items():
-                        st.write(f"✓ Completed step: `{node_name}`")
-                        
-                        # Capture the latest answer generated
-                        if "answer" in state_update and state_update["answer"]:
-                            final_answer = state_update["answer"]
-                
-                status.update(label="Complete!", state="complete", expanded=False)
+    with st.chat_message("assistant"):
+        with st.status("Thinking...", expanded=True) as status:
+            for event in app.stream(initial_state, config=config, stream_mode="updates"):
+                for node_name, state_update in event.items():
+                    st.write(f"Completed step: `{node_name}`")
+                    if state_update.get("cache_score"):
+                        cache_score = float(state_update["cache_score"])
+                    if state_update.get("response_source"):
+                        response_source = state_update["response_source"]
+                    if state_update.get("answer"):
+                        final_answer = state_update["answer"]
+            status.update(label="Complete", state="complete", expanded=False)
 
-            # Stream the final answer while preserving markdown structure
-            def _stream_answer(text):
-                for line in text.splitlines(keepends=True):
-                    for word in line.split(" "):
-                        yield word + " "
-                        time.sleep(0.02)
+        if response_source == "semantic_cache" and cache_score:
+            st.caption(f"Redis semantic cache hit (similarity: {cache_score:.3f})")
 
-            st.write_stream(_stream_answer(final_answer))
+        def _stream_answer(text: str):
+            for line in text.splitlines(keepends=True):
+                for word in line.split(" "):
+                    yield word + " "
+                    time.sleep(0.02)
 
-        # Update semantic cache with the latest successful graph answer
-        try:
-            semantic_cache.add(prompt, final_answer)
-        except Exception:
-            pass
-        
-    # Save Assistant Message to Database
+        st.write_stream(_stream_answer(final_answer))
+
     add_message(st.session_state.current_thread_id, "assistant", final_answer)
-    
-    # If it's a new chat, update title based on first prompt
+
     if len(messages) == 0:
         short_title = prompt[:25] + "..." if len(prompt) > 25 else prompt
-        with psycopg.connect(DB_URI) as conn:
-            with conn.cursor() as cur:
-                cur.execute("UPDATE chat_threads SET title = %s WHERE thread_id = %s", 
-                            (short_title, st.session_state.current_thread_id))
-            conn.commit()
+        update_thread_title(st.session_state.current_thread_id, short_title)
         st.rerun()
