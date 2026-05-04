@@ -81,8 +81,8 @@ class RedisSemanticCache:
 
         self.client = redis.Redis.from_url(redis_url, decode_responses=False)
         self.encoder = HuggingFaceEmbeddings(model_name=self.embedding_model)
-        probe_vector = self.encoder.embed_query("semantic-cache-probe")
-        self.vector_dim = len(probe_vector)
+        # probe_vector = self.encoder.embed_query("semantic-cache-probe")
+        self.vector_dim = 384 
         self._ensure_index()
 
     def _ensure_index(self) -> None:
