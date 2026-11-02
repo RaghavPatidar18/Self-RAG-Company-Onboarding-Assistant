@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 import re
 from pathlib import Path
@@ -17,6 +18,7 @@ from src.config.settings import settings
 from src.services.document_reader import process_pdf, process_pptx, process_txt
 
 console = Console()
+logger = logging.getLogger(__name__)
 
 embeddings = HuggingFaceEmbeddings(model_name=settings.embedding_model)
 
@@ -42,8 +44,8 @@ async def _recreate_collection(client: AsyncQdrantClient, vector_size: int) -> b
             ),
         )
         return True
-    except Exception as exc:  # pragma: no cover
-        console.print(f"[bold red]Failed to recreate Qdrant collection:[/] {exc}")
+    except Exception:  # pragma: no cover
+        logger.exception("Failed to recreate Qdrant collection")
         return False
 
 
@@ -114,8 +116,8 @@ async def _upsert_chunks(chunks: list[Document], batch_size: int = settings.qdra
 def _ensure_collection_exists(client: QdrantClient) -> bool:
     try:
         return client.collection_exists(settings.qdrant_collection_name)
-    except Exception as exc:  # pragma: no cover
-        console.print(f"[bold red]Failed to check Qdrant collection:[/] {exc}")
+    except Exception:  # pragma: no cover
+        logger.exception("Failed to check Qdrant collection")
         return False
 
 
@@ -212,31 +214,31 @@ async def index_all_documents_async() -> int:
 
         try:
             if ext == ".pdf":
-                console.print(f"\n[bold cyan]Processing PDF:[/] {filename}")
+                logger.info("Processing PDF document: %s", filename)
                 text = process_pdf(str(path))
                 docs = text_to_documents(text, filename, "pdf")
             elif ext == ".txt":
-                console.print(f"\n[bold cyan]Processing TXT:[/] {filename}")
+                logger.info("Processing TXT document: %s", filename)
                 text = process_txt(str(path))
                 docs = text_to_documents(text, filename, "txt")
             elif ext == ".pptx":
-                console.print(f"\n[bold cyan]Processing PPTX:[/] {filename}")
+                logger.info("Processing PPTX document: %s", filename)
                 text = process_pptx(str(path))
                 docs = text_to_documents(text, filename, "pptx")
             else:
                 continue
 
             all_docs.extend(docs)
-            console.print(f"[bold green]✓[/] Extracted {len(docs)} section(s) from {filename}")
-        except Exception as exc:
-            console.print(f"[bold red]Error processing {filename}:[/] {exc}")
+            logger.info("Extracted %d section(s) from %s", len(docs), filename)
+        except Exception:
+            logger.exception("Failed to process document: %s", filename)
             continue
 
     if not all_docs:
-        console.print("[bold yellow]No documents found to index.[/]")
+        logger.warning("No supported documents found to index in %s", docs_dir)
         return 0
 
-    console.print(f"\n[bold]Chunking {len(all_docs)} section(s) into smaller pieces...[/]")
+    logger.info("Chunking %d extracted document section(s)", len(all_docs))
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=settings.document_chunk_size,
         chunk_overlap=settings.document_chunk_overlap,
@@ -245,6 +247,7 @@ async def index_all_documents_async() -> int:
 
     with console.status("[bold green]Upserting chunks into Qdrant..."):
         upserted = await _upsert_chunks(chunks)
+    logger.info("Indexed %d chunk(s) into Qdrant", upserted)
     return upserted
 
 
@@ -258,11 +261,14 @@ def get_retriever(k: int | None = None):
         if not _ensure_collection_exists(client):
             return None
         return _QdrantRetriever(client=client, k=k or settings.retriever_top_k)
-    except Exception as exc:  # pragma: no cover
-        console.print(f"[bold red]Failed to initialize Qdrant retriever:[/] {exc}")
+    except Exception:  # pragma: no cover
+        logger.exception("Failed to initialize Qdrant retriever")
         return None
 
 
 if __name__ == "__main__":
+    from src.config.logging_utils import configure_logging
+
+    configure_logging()
     total = index_all_documents()
-    console.print(f"\n[bold]Total chunks indexed:[/] {total}")
+    logger.info("Indexing completed; total chunks indexed: %d", total)

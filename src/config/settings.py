@@ -58,6 +58,11 @@ class Settings:
     eval_groq_temperature = float(os.getenv("EVAL_GROQ_TEMPERATURE", "0"))
     eval_groq_max_retries = int(os.getenv("EVAL_GROQ_MAX_RETRIES", "2"))
 
+    log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+    log_file = os.getenv("LOG_FILE", "logs/app.log")
+    log_max_bytes = int(os.getenv("LOG_MAX_BYTES", str(5 * 1024 * 1024)))
+    log_backup_count = int(os.getenv("LOG_BACKUP_COUNT", "3"))
+
 
 settings = Settings()
 

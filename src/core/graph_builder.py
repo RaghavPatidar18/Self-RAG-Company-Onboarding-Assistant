@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Any, Literal, TypedDict
 
 from langchain_core.documents import Document
@@ -20,6 +21,8 @@ from src.db.base import (
 )
 from src.services.index_docs import get_retriever
 from src.services.redis_store import RedisSemanticCache, RedisSessionManager
+
+logger = logging.getLogger(__name__)
 
 llm = ChatGroq(groq_api_key=settings.groq_api_key, model_name=settings.groq_model)
 
@@ -126,6 +129,7 @@ def hydrate_memory(state: State, config: RunnableConfig):
     try:
         short_term_messages = session_manager.get_messages(thread_id) if session_manager else []
     except Exception:
+        logger.warning("Could not read short-term session memory", exc_info=True)
         short_term_messages = []
 
     summary_row = get_thread_summary(thread_id)
@@ -152,6 +156,7 @@ def check_semantic_cache(state: State, config: RunnableConfig):
     try:
         hit = semantic_cache.get(state["question"]) if semantic_cache else None
     except Exception:
+        logger.warning("Semantic cache lookup failed; continuing without a cache hit", exc_info=True)
         hit = None
 
     if not hit:
@@ -439,7 +444,7 @@ Keep it concise, factual, and optimized for future prompting.""",
         try:
             session_manager.replace_messages(thread_id, updated_messages)
         except Exception:
-            pass
+            logger.warning("Could not persist short-term session memory", exc_info=True)
 
     memory_context = _build_memory_context(
         rolling_summary=rolling_summary,
@@ -520,7 +525,7 @@ def update_semantic_cache(state: State, config: RunnableConfig):
         try:
             semantic_cache_singleton.add(state["question"], answer, response_source="graph")
         except Exception:
-            pass
+            logger.warning("Could not update the semantic cache", exc_info=True)
     return {"response_source": state.get("response_source")}
 
 

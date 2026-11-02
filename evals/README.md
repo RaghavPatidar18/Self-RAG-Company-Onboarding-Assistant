@@ -28,3 +28,5 @@ Each run makes live Groq calls. Application suites also rely on configured datab
 ## Configuration
 
 Runtime configuration is read centrally from `src/config/settings.py`, with environment variable names and defaults listed in `.example.env`. In particular, `DOCUMENT_CHUNK_SIZE` and `DOCUMENT_CHUNK_OVERLAP` control indexing; after changing either, rerun document indexing so Qdrant contains chunks built with those values. `GROQ_MODEL` selects the application model, while `EVAL_GROQ_MODEL`, `EVAL_GROQ_TEMPERATURE`, and `EVAL_GROQ_MAX_RETRIES` control the judge.
+
+Application and indexing logs use Python's standard logging system. Set `LOG_LEVEL` (`DEBUG`, `INFO`, `WARNING`, `ERROR`, or `CRITICAL`) to change verbosity. Logs go to stderr and to a rotating file at `LOG_FILE` by default (`logs/app.log`); `LOG_MAX_BYTES` and `LOG_BACKUP_COUNT` control rotation. Set `LOG_FILE=` to disable file logging.

@@ -201,6 +201,10 @@ streamlit run app.py
 ### 6. Build retrieval index
 In sidebar, click **Index Documents Here**.
 
+### Logging
+
+The app writes timestamped logs to the terminal and a rotating `logs/app.log` file. Configure verbosity with `LOG_LEVEL` (`DEBUG`, `INFO`, `WARNING`, `ERROR`, or `CRITICAL`); set `LOG_FILE=` to disable the file handler. `LOG_MAX_BYTES` and `LOG_BACKUP_COUNT` control rotation. Chat prompts and answers are not included in application log messages.
+
 ---
 
 ## Runtime Flow Summary
