@@ -11,7 +11,11 @@ from psycopg_pool import ConnectionPool
 from src.config.settings import settings
 
 
-db_pool = ConnectionPool(conninfo=settings.database_url, max_size=20, kwargs={"row_factory": dict_row})
+db_pool = ConnectionPool(
+    conninfo=settings.database_url,
+    max_size=settings.postgres_pool_max_size,
+    kwargs={"row_factory": dict_row},
+)
 DB_URI = settings.database_url
 
 

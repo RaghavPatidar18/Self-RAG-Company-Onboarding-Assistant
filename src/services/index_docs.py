@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from dotenv import load_dotenv
 from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -17,11 +16,9 @@ from rich.console import Console
 from src.config.settings import settings
 from src.services.document_reader import process_pdf, process_pptx, process_txt
 
-load_dotenv()
-
 console = Console()
 
-embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+embeddings = HuggingFaceEmbeddings(model_name=settings.embedding_model)
 
 
 def _build_async_qdrant_client() -> AsyncQdrantClient:
@@ -240,7 +237,10 @@ async def index_all_documents_async() -> int:
         return 0
 
     console.print(f"\n[bold]Chunking {len(all_docs)} section(s) into smaller pieces...[/]")
-    splitter = RecursiveCharacterTextSplitter(chunk_size=512, chunk_overlap=200)
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=settings.document_chunk_size,
+        chunk_overlap=settings.document_chunk_overlap,
+    )
     chunks = splitter.split_documents(all_docs)
 
     with console.status("[bold green]Upserting chunks into Qdrant..."):
@@ -252,12 +252,12 @@ def index_all_documents() -> int:
     return asyncio.run(index_all_documents_async())
 
 
-def get_retriever(k: int = 5):
+def get_retriever(k: int | None = None):
     client = _build_sync_qdrant_client()
     try:
         if not _ensure_collection_exists(client):
             return None
-        return _QdrantRetriever(client=client, k=k)
+        return _QdrantRetriever(client=client, k=k or settings.retriever_top_k)
     except Exception as exc:  # pragma: no cover
         console.print(f"[bold red]Failed to initialize Qdrant retriever:[/] {exc}")
         return None

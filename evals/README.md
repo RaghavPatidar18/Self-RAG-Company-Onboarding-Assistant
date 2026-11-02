@@ -24,3 +24,7 @@ Every judge prompt is task-specific and includes explicit pass/fail rules derive
 5. Check the process exit code (0 means all cases passed; 1 means at least one case failed) and inspect the corresponding folder under `evals/results/` for response and judge rationale details. Files are named like `scope_2026-11-02_15-45-30_IST.json`.
 
 Each run makes live Groq calls. Application suites also rely on configured database/cache services and may use model embeddings for cache initialization.
+
+## Configuration
+
+Runtime configuration is read centrally from `src/config/settings.py`, with environment variable names and defaults listed in `.example.env`. In particular, `DOCUMENT_CHUNK_SIZE` and `DOCUMENT_CHUNK_OVERLAP` control indexing; after changing either, rerun document indexing so Qdrant contains chunks built with those values. `GROQ_MODEL` selects the application model, while `EVAL_GROQ_MODEL`, `EVAL_GROQ_TEMPERATURE`, and `EVAL_GROQ_MAX_RETRIES` control the judge.

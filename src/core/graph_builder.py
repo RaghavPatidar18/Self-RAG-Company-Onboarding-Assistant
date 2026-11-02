@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import os
 from typing import Any, Literal, TypedDict
 
-from dotenv import load_dotenv
 from langchain_core.documents import Document
 from langchain_core.messages import SystemMessage
 from langchain_core.prompts import ChatPromptTemplate
@@ -23,12 +21,10 @@ from src.db.base import (
 from src.services.index_docs import get_retriever
 from src.services.redis_store import RedisSemanticCache, RedisSessionManager
 
-load_dotenv()
+llm = ChatGroq(groq_api_key=settings.groq_api_key, model_name=settings.groq_model)
 
-llm = ChatGroq(groq_api_key=settings.groq_api_key, model_name="openai/gpt-oss-120b")
-
-MAX_SHORT_TERM_TURNS = int(os.getenv("SHORT_TERM_MAX_TURNS", "10"))
-RETAINED_SHORT_TERM_TURNS = int(os.getenv("SHORT_TERM_RETAIN_TURNS", "4"))
+MAX_SHORT_TERM_TURNS = settings.short_term_max_turns
+RETAINED_SHORT_TERM_TURNS = settings.short_term_retain_turns
 session_manager_singleton: RedisSessionManager | None = None
 semantic_cache_singleton: RedisSemanticCache | None = None
 
@@ -312,7 +308,7 @@ Verify if the answer is strictly supported by the provided context.""",
 
 
 def route_after_issup(state: State):
-    if state.get("issup") == "fully_supported" or state.get("retries", 0) >= 3:
+    if state.get("issup") == "fully_supported" or state.get("retries", 0) >= settings.max_answer_retries:
         return "accept_answer"
     return "revise_answer"
 
@@ -360,7 +356,7 @@ Mark it useful only when it addresses the question clearly and actionably.""",
 def route_after_isuse(state: State):
     if state.get("isuse") == "useful":
         return "sync_session_memory"
-    if state.get("rewrite_tries", 0) >= 3:
+    if state.get("rewrite_tries", 0) >= settings.max_retrieval_rewrites:
         return "no_answer_found"
     return "rewrite_question"
 

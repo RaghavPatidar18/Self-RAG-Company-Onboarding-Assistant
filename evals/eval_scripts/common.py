@@ -2,23 +2,28 @@
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 from typing import Any
 from datetime import datetime
 
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
+from src.config.settings import settings
 
 ROOT = Path(__file__).resolve().parents[2]
 load_dotenv(ROOT / ".env")
-MODEL = os.getenv("EVAL_GROQ_MODEL", "openai/gpt-oss-120b")
+MODEL = settings.eval_groq_model
 
 
 def judge(prompt: str) -> dict[str, Any]:
-    if not os.getenv("GROQ_API_KEY"):
+    if not settings.groq_api_key:
         raise RuntimeError("GROQ_API_KEY is required (set it in .env or environment).")
-    model = ChatGroq(model=MODEL, temperature=0, max_retries=2)
+    model = ChatGroq(
+        groq_api_key=settings.groq_api_key,
+        model=MODEL,
+        temperature=settings.eval_groq_temperature,
+        max_retries=settings.eval_groq_max_retries,
+    )
     response = model.invoke(prompt)
     raw = response.content if isinstance(response.content, str) else "".join(
         str(part.get("text", "")) for part in response.content if isinstance(part, dict)

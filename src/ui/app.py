@@ -1,10 +1,8 @@
-import os
 import time
 import uuid
 
 import psycopg
 import streamlit as st
-from dotenv import load_dotenv
 from langgraph.checkpoint.postgres import PostgresSaver
 from psycopg_pool import ConnectionPool
 
@@ -25,8 +23,6 @@ from src.services.redis_store import RedisSemanticCache, RedisSessionManager
 
 def main():
     st.set_page_config(page_title="Company On-boarding RAG", layout="wide")
-    load_dotenv()
-
     @st.cache_resource
     def setup_environment():
         init_db()
@@ -34,10 +30,9 @@ def main():
         with psycopg.connect(DB_URI, autocommit=True) as conn:
             PostgresSaver(conn).setup()
 
-        semantic_cache_threshold = float(os.getenv("SEMANTIC_CACHE_THRESHOLD", "0.88"))
         session_manager = RedisSessionManager()
-        semantic_cache = RedisSemanticCache(threshold=semantic_cache_threshold)
-        checkpoint_pool = ConnectionPool(conninfo=DB_URI, max_size=20)
+        semantic_cache = RedisSemanticCache()
+        checkpoint_pool = ConnectionPool(conninfo=DB_URI, max_size=settings.postgres_pool_max_size)
         checkpointer = PostgresSaver(checkpoint_pool)
         graph = build_graph(checkpointer, session_manager, semantic_cache)
         return graph, session_manager, semantic_cache
