@@ -1,0 +1,92 @@
+[
+{
+"id": "1",
+"query": "What is LuminaTech's mission statement?",
+"ideal_context": "Mission: To eliminate operational friction for enterprise teams through intelligent, highly scalable, and completely secure data pipelines. We believe that engineers and analysts should spend their time generating insights, not untangling legacy database schemas.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 1)"
+},
+{
+"id": "2",
+"query": "Who is the Chief Revenue Officer?",
+"ideal_context": "David Chen | Chief Revenue Officer (CRO) | Austin, TX | Global sales, enterprise partnerships, and marketing.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 2)"
+},
+{
+"id": "3",
+"query": "What technologies make up the backend and orchestration for LuminaCore?",
+"ideal_context": "Tech Stack: Backend written in Rust for high-performance ingestion; orchestration logic written in Python 3.11; streams managed by Apache Kafka; state stored in PostgreSQL.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 2)"
+},
+{
+"id": "4",
+"query": "How much does LuminaGuard cost?",
+"ideal_context": "Pricing Model: Flat fee add-on to LuminaCore at $5,000 per month per production environment.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 3)"
+},
+{
+"id": "5",
+"query": "What is the procedure if a company-issued laptop is stolen?",
+"ideal_context": "Lost or Stolen Devices: If any company hardware is lost or stolen, it constitutes a critical security event. You must report it to sec-ops@luminatech.com within 4 hours to initiate remote Mobile Device Management (MDM) wiping protocols.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 3)"
+},
+{
+"id": "6",
+"query": "Which VPN software is required to access internal wikis?",
+"ideal_context": "Virtual Private Network (VPN): Cisco Secure Client is pre-installed on all machines. You must be connected to the VPN to access staging environments, Jenkins build servers, and internal Confluence wikis.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 4)"
+},
+{
+"id": "7",
+"query": "What is the mandatory format for the daily standup meeting?",
+"ideal_context": "Daily Standup: 10:00 AM local time for your squad. Max 15 minutes. Format: What I did yesterday, what I am doing today, blockers.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 4)"
+},
+{
+"id": "8",
+"query": "When does the system automatically trigger a deployment rollback?",
+"ideal_context": "Rollback Protocol: Every deployment must have an automated rollback script prepared. If error rates spike by more than 5% within 15 minutes of a deployment, the rollback is triggered automatically.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 5)"
+},
+{
+"id": "9",
+"query": "What defines a Sev0 incident?",
+"ideal_context": "Sev0 | Total platform outage or massive data breach. Core services completely unavailable to all clients. | 5 minutes (24/7) | Status page updated every 15 mins. Exec team notified immediately.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 6)"
+},
+{
+"id": "10",
+"query": "What is the parental leave policy for primary caregivers?",
+"ideal_context": "Parental Leave: We support growing families. Primary caregivers are eligible for 16 weeks of fully paid leave. Secondary caregivers receive 8 weeks. This benefit is available to all employees after 90 days of continuous employment, applicable to birth, adoption, or foster placement.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 6)"
+},
+{
+"id": "11",
+"query": "What days are employees in Austin and London required to be in the office?",
+"ideal_context": "Hybrid Model: Employees whose primary residence is within a 50-mile radius of the Austin, TX or London, UK offices are expected to work on-site on Tuesdays and Thursdays. Mondays, Wednesdays, and Fridays are remote-optional.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 7)"
+},
+{
+"id": "12",
+"query": "What is the daily meal per diem for an employee traveling to San Francisco?",
+"ideal_context": "Meals (Per Diem) | $50/day standard. $75/day in tier-1 cities. Includes tips. | Required for expenses > $25. (Note: SF is a tier-1 city based on lodging row).",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 7)"
+},
+{
+"id": "13",
+"query": "What is determined during the Q3 comprehensive annual review?",
+"ideal_context": "Q3 Review (October): The comprehensive annual review. This review determines annual bonuses, equity refresh grants, and base salary adjustments.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 8)"
+},
+{
+"id": "14",
+"query": "What are the core focus areas for a Principal Engineer (L5)?",
+"ideal_context": "L5 (Principal): Organizational impact. Reports directly to the CTO. Focuses on next-generation R&D, industry-wide technical standards, and company-wide architecture.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 8)"
+},
+{
+"id": "15",
+"query": "How should an employee report a suspicious email?",
+"ideal_context": "Phishing & Social Engineering: LuminaTech conducts unannounced simulated phishing campaigns monthly. If you receive a suspicious email, do not click any links. Report it immediately using the Report Phish plugin in Gmail, or forward it to security@luminatech.com.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 9)"
+}
+]

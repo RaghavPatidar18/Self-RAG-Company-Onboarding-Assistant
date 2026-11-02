@@ -1,0 +1,92 @@
+[
+{
+"id": "1",
+"query": "What are the four core values of LuminaTech?",
+"idea_answer": "The four core values are Iterative Innovation, Default to Transparency, Customer-Centric Architecture, and Radical Ownership.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 1)"
+},
+{
+"id": "2",
+"query": "Who is the Chief Information Security Officer (CISO) and where are they located?",
+"idea_answer": "Dr. Aisha Rahman is the Chief Information Security Officer, and she is located Remotely in NY.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 2)"
+},
+{
+"id": "3",
+"query": "What is the pricing model for the LuminaCore platform?",
+"idea_answer": "LuminaCore uses a consumption-based pricing model. Clients are billed $0.05 per Gigabyte (GB) of data ingested per month, with a minimum enterprise commit of $120,000 annually.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 2)"
+},
+{
+"id": "4",
+"query": "Which SaaS applications does LuminaSync natively support for bidirectional sync?",
+"idea_answer": "LuminaSync natively supports bidirectional sync for Salesforce, Jira, SAP S/4HANA, Zendesk, and HubSpot.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 3)"
+},
+{
+"id": "5",
+"query": "What standard issue device is provided to an employee in the Sales department, and what is its refresh cycle?",
+"idea_answer": "An employee in the Sales department is issued a Lenovo ThinkPad X1 Carbon (Intel i7, 16GB RAM, 512GB SSD), which is on a 4-year refresh cycle.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 3)"
+},
+{
+"id": "6",
+"query": "Why is SMS-based Multi-Factor Authentication (MFA) strictly prohibited?",
+"idea_answer": "SMS-based MFA is strictly prohibited due to SIM-swapping risks.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 4)"
+},
+{
+"id": "7",
+"query": "Which Slack channel should be used for critical system outages?",
+"idea_answer": "The #incidents-sev1 channel is used exclusively for critical system outages.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 4)"
+},
+{
+"id": "8",
+"query": "What are the approval requirements for merging a Pull Request (PR)?",
+"idea_answer": "A PR requires a minimum of two (2) approvals from Senior Engineers (Level 4 or above) before it can be merged.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 5)"
+},
+{
+"id": "9",
+"query": "What is LuminaTech's policy regarding production deployments on Fridays?",
+"idea_answer": "Fridays are known as 'Read-Only Fridays.' Deployments are strictly prohibited unless authorized in writing by the VP of Engineering or the CTO, and are typically reserved only for Sev0/Sev1 hotfixes.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 5)"
+},
+{
+"id": "10",
+"query": "What is the response SLA and communication cadence for a Sev1 incident?",
+"idea_answer": "A Sev1 incident requires a 15-minute (24/7) response SLA, and the status page must be updated every 30 minutes.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 6)"
+},
+{
+"id": "11",
+"query": "How many days of Paid Time Off (PTO) does a full-time employee get, and what is the maximum balance allowed?",
+"idea_answer": "Full-time employees accrue 21 days of PTO per calendar year. With a maximum of 5 days rolling over to the next year, the PTO balance maxes out at 26 days.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 6)"
+},
+{
+"id": "12",
+"query": "What are the restrictions of the Work From Anywhere (WFA) policy?",
+"idea_answer": "Employees can work from an alternative geographic location for up to 30 days per calendar year. They must maintain at least a 4-hour working overlap with US Central Time (CT) and secure written managerial approval 14 days prior to travel.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 7)"
+},
+{
+"id": "13",
+"query": "What are the core responsibilities of an L3 (Senior) Engineer?",
+"idea_answer": "An L3 Engineer leads complex feature development, mentors L1/L2 engineers, and is expected to contribute significantly to system architecture and code review.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 8)"
+},
+{
+"id": "14",
+"query": "Give three examples of 'Restricted' data according to the data classification tiers.",
+"idea_answer": "Examples of Restricted data include Customer PII (Personally Identifiable Information), production database credentials, and employee HR and medical records.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 9)"
+},
+{
+"id": "15",
+"query": "What is the annual budget provided to Employee Resource Groups (ERGs)?",
+"idea_answer": "Each ERG is granted an annual budget of $2,000 for events and guest speakers.",
+"source": "LuminaTech Comprehensive Employee Handbook.pdf (Page 10)"
+}
+]
