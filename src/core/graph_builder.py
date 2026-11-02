@@ -13,15 +13,15 @@ from langgraph.graph import END, START, StateGraph
 from langsmith import traceable
 from pydantic import BaseModel, Field
 
-from company_onboarding_assistant.config.settings import settings
-from company_onboarding_assistant.db.base import (
+from src.config.settings import settings
+from src.db.base import (
     get_long_term_memories,
     get_thread_summary,
     upsert_long_term_memories,
     upsert_thread_summary,
 )
-from company_onboarding_assistant.services.index_docs import get_retriever
-from company_onboarding_assistant.services.redis_store import RedisSemanticCache, RedisSessionManager
+from src.services.index_docs import get_retriever
+from src.services.redis_store import RedisSemanticCache, RedisSessionManager
 
 load_dotenv()
 

@@ -16,7 +16,7 @@ from redis.commands.search.index_definition import IndexDefinition, IndexType
 from redis.commands.search.query import Query
 from redis.exceptions import ResponseError
 
-from company_onboarding_assistant.config.settings import settings
+from src.config.settings import settings
 
 load_dotenv()
 

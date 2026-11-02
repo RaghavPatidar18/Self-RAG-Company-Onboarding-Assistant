@@ -8,9 +8,9 @@ from dotenv import load_dotenv
 from langgraph.checkpoint.postgres import PostgresSaver
 from psycopg_pool import ConnectionPool
 
-from company_onboarding_assistant.config.settings import settings
-from company_onboarding_assistant.core.graph_builder import build_graph
-from company_onboarding_assistant.db.base import (
+from src.config.settings import settings
+from src.core.graph_builder import build_graph
+from src.db.base import (
     DB_URI,
     add_message,
     create_thread,
@@ -19,8 +19,8 @@ from company_onboarding_assistant.db.base import (
     init_db,
     update_thread_title,
 )
-from company_onboarding_assistant.services.index_docs import index_all_documents
-from company_onboarding_assistant.services.redis_store import RedisSemanticCache, RedisSessionManager
+from src.services.index_docs import index_all_documents
+from src.services.redis_store import RedisSemanticCache, RedisSessionManager
 
 
 def main():

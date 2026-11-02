@@ -14,8 +14,8 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from qdrant_client import AsyncQdrantClient, QdrantClient, models
 from rich.console import Console
 
-from company_onboarding_assistant.config.settings import settings
-from company_onboarding_assistant.services.document_reader import process_pdf, process_pptx, process_txt
+from src.config.settings import settings
+from src.services.document_reader import process_pdf, process_pptx, process_txt
 
 load_dotenv()
 
