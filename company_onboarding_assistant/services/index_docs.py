@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import os
 import re
@@ -12,44 +14,39 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from qdrant_client import AsyncQdrantClient, QdrantClient, models
 from rich.console import Console
 
-from document_reader import process_pdf, process_pptx, process_txt
+from company_onboarding_assistant.config.settings import settings
+from company_onboarding_assistant.services.document_reader import process_pdf, process_pptx, process_txt
 
 load_dotenv()
 
 console = Console()
 
-QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "ocr_chunks")
-QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
-QDRANT_VECTOR_DIMENSION = int(os.getenv("QDRANT_VECTOR_DIMENSION", "384"))
-UPSERT_BATCH_SIZE = int(os.getenv("QDRANT_UPSERT_BATCH_SIZE", "64"))
-DOCS_FOLDER = "./documents"
-
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
 
 def _build_async_qdrant_client() -> AsyncQdrantClient:
-    return AsyncQdrantClient(url=QDRANT_URL)
+    return AsyncQdrantClient(url=settings.qdrant_url)
 
 
 def _build_sync_qdrant_client() -> QdrantClient:
-    return QdrantClient(url=QDRANT_URL)
+    return QdrantClient(url=settings.qdrant_url)
 
 
 async def _recreate_collection(client: AsyncQdrantClient, vector_size: int) -> bool:
     try:
-        if await client.collection_exists(QDRANT_COLLECTION_NAME):
-            await client.delete_collection(QDRANT_COLLECTION_NAME)
+        if await client.collection_exists(settings.qdrant_collection_name):
+            await client.delete_collection(settings.qdrant_collection_name)
 
         await client.create_collection(
-            collection_name=QDRANT_COLLECTION_NAME,
+            collection_name=settings.qdrant_collection_name,
             vectors_config=models.VectorParams(
                 size=vector_size,
                 distance=models.Distance.COSINE,
             ),
         )
         return True
-    except Exception as e:
-        console.print(f"[bold red]Failed to recreate Qdrant collection:[/] {e}")
+    except Exception as exc:  # pragma: no cover
+        console.print(f"[bold red]Failed to recreate Qdrant collection:[/] {exc}")
         return False
 
 
@@ -80,14 +77,14 @@ def _build_point_payload(doc: Document) -> dict[str, Any]:
     }
 
 
-async def _upsert_chunks(chunks: list[Document], batch_size: int = UPSERT_BATCH_SIZE) -> int:
+async def _upsert_chunks(chunks: list[Document], batch_size: int = settings.qdrant_upsert_batch_size) -> int:
     if not chunks:
         return 0
 
     client = _build_async_qdrant_client()
     try:
         probe_vector = await asyncio.to_thread(embeddings.embed_query, "embedding-dimension-probe")
-        vector_size = len(probe_vector) or QDRANT_VECTOR_DIMENSION
+        vector_size = len(probe_vector) or settings.qdrant_vector_dimension
         ok = await _recreate_collection(client, vector_size=vector_size)
         if not ok:
             return 0
@@ -107,7 +104,7 @@ async def _upsert_chunks(chunks: list[Document], batch_size: int = UPSERT_BATCH_
                 for doc, vector in zip(batch, batch_vectors)
             ]
             await client.upsert(
-                collection_name=QDRANT_COLLECTION_NAME,
+                collection_name=settings.qdrant_collection_name,
                 points=points,
                 wait=True,
             )
@@ -119,16 +116,16 @@ async def _upsert_chunks(chunks: list[Document], batch_size: int = UPSERT_BATCH_
 
 def _ensure_collection_exists(client: QdrantClient) -> bool:
     try:
-        return client.collection_exists(QDRANT_COLLECTION_NAME)
-    except Exception as e:
-        console.print(f"[bold red]Failed to check Qdrant collection:[/] {e}")
+        return client.collection_exists(settings.qdrant_collection_name)
+    except Exception as exc:  # pragma: no cover
+        console.print(f"[bold red]Failed to check Qdrant collection:[/] {exc}")
         return False
 
 
 def _query_qdrant(client: QdrantClient, query: str, limit: int) -> list[Document]:
     query_vector = embeddings.embed_query(query)
     query_response = client.query_points(
-        collection_name=QDRANT_COLLECTION_NAME,
+        collection_name=settings.qdrant_collection_name,
         query=query_vector,
         limit=limit,
         with_payload=True,
@@ -148,7 +145,6 @@ def _query_qdrant(client: QdrantClient, query: str, limit: int) -> list[Document
         else:
             metadata = {}
 
-        # Backward-compatible parsing for older payload format.
         if not metadata:
             metadata = {k: v for k, v in payload.items() if k != "page_content"}
 
@@ -171,102 +167,72 @@ class _QdrantRetriever:
 
 
 def text_to_documents(text: str, filename: str, file_type: str) -> list[Document]:
-    """
-    Converts raw OCR-extracted text into Document objects with metadata.
-    Splits PDF text by page markers and PPTX text by slide markers so that
-    each section gets proper metadata (source, file_type, page/slide number).
-    """
-    docs = []
+    docs: list[Document] = []
 
     if file_type == "pdf":
-        # process_pdf() produces: "--- Page 1 ---\ntext\n--- Page 2 ---\ntext"
-        # re.split with a capturing group gives: ['', '1', 'text1', '2', 'text2', ...]
-        parts = re.split(r'--- Page (\d+) ---', text)
+        parts = re.split(r"--- Page (\d+) ---", text)
         for i in range(1, len(parts), 2):
             content = parts[i + 1].strip() if i + 1 < len(parts) else ""
             if content:
-                docs.append(Document(
-                    page_content=content,
-                    metadata={
-                        "source": filename,
-                        "file_type": file_type,
-                        "page": int(parts[i]),
-                    }
-                ))
+                docs.append(
+                    Document(
+                        page_content=content,
+                        metadata={"source": filename, "file_type": file_type, "page": int(parts[i])},
+                    )
+                )
 
     elif file_type == "pptx":
-        # process_pptx() produces: "--- Slide 1 ---\ntext\n\n--- Slide 2 ---\ntext"
-        parts = re.split(r'--- Slide (\d+) ---', text)
+        parts = re.split(r"--- Slide (\d+) ---", text)
         for i in range(1, len(parts), 2):
             content = parts[i + 1].strip() if i + 1 < len(parts) else ""
             if content:
-                docs.append(Document(
-                    page_content=content,
-                    metadata={
-                        "source": filename,
-                        "file_type": file_type,
-                        "slide": int(parts[i]),
-                    }
-                ))
+                docs.append(
+                    Document(
+                        page_content=content,
+                        metadata={"source": filename, "file_type": file_type, "slide": int(parts[i])},
+                    )
+                )
 
-    else:  # txt — plain text, no markers
+    else:
         if text.strip():
-            docs.append(Document(
-                page_content=text,
-                metadata={"source": filename, "file_type": file_type}
-            ))
+            docs.append(Document(page_content=text, metadata={"source": filename, "file_type": file_type}))
 
-    # Fallback: if parsing produced nothing, store the whole text as one document
     if not docs and text.strip():
-        docs.append(Document(
-            page_content=text,
-            metadata={"source": filename, "file_type": file_type}
-        ))
+        docs.append(Document(page_content=text, metadata={"source": filename, "file_type": file_type}))
 
     return docs
 
 
 async def index_all_documents_async() -> int:
-    """
-    Scans DOCS_FOLDER, runs EasyOCR on every supported file (PDF, TXT, PPTX),
-    chunks the extracted text, embeds it with HuggingFace, and persists to a
-    Qdrant Cloud collection.
-
-    Returns the total number of chunks indexed.
-    """
-    if not os.path.exists(DOCS_FOLDER):
-        os.makedirs(DOCS_FOLDER)
+    docs_dir = settings.docs_dir
+    if not docs_dir.exists():
+        docs_dir.mkdir(parents=True, exist_ok=True)
 
     all_docs: list[Document] = []
-
-    for filename in sorted(os.listdir(DOCS_FOLDER)):
-        path = os.path.join(DOCS_FOLDER, filename)
+    for filename in sorted(os.listdir(docs_dir)):
+        path = docs_dir / filename
         ext = os.path.splitext(filename)[1].lower()
 
         try:
             if ext == ".pdf":
                 console.print(f"\n[bold cyan]Processing PDF:[/] {filename}")
-                text = process_pdf(path)
+                text = process_pdf(str(path))
                 docs = text_to_documents(text, filename, "pdf")
-
             elif ext == ".txt":
                 console.print(f"\n[bold cyan]Processing TXT:[/] {filename}")
-                text = process_txt(path)
+                text = process_txt(str(path))
                 docs = text_to_documents(text, filename, "txt")
-
             elif ext == ".pptx":
                 console.print(f"\n[bold cyan]Processing PPTX:[/] {filename}")
-                text = process_pptx(path)
+                text = process_pptx(str(path))
                 docs = text_to_documents(text, filename, "pptx")
-
             else:
                 continue
 
             all_docs.extend(docs)
             console.print(f"[bold green]✓[/] Extracted {len(docs)} section(s) from {filename}")
-
-        except Exception as e:
-            console.print(f"[bold red]Error processing {filename}:[/] {e}")
+        except Exception as exc:
+            console.print(f"[bold red]Error processing {filename}:[/] {exc}")
             continue
 
     if not all_docs:
@@ -287,14 +253,13 @@ def index_all_documents() -> int:
 
 
 def get_retriever(k: int = 4):
-    """Returns a simple retriever over Qdrant, or None if unavailable."""
     client = _build_sync_qdrant_client()
     try:
         if not _ensure_collection_exists(client):
             return None
         return _QdrantRetriever(client=client, k=k)
-    except Exception as e:
-        console.print(f"[bold red]Failed to initialize Qdrant retriever:[/] {e}")
+    except Exception as exc:  # pragma: no cover
+        console.print(f"[bold red]Failed to initialize Qdrant retriever:[/] {exc}")
         return None
 
 

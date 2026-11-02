@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 from typing import Any, Literal, TypedDict
 
@@ -11,19 +13,19 @@ from langgraph.graph import END, START, StateGraph
 from langsmith import traceable
 from pydantic import BaseModel, Field
 
-from database import (
+from company_onboarding_assistant.config.settings import settings
+from company_onboarding_assistant.db.base import (
     get_long_term_memories,
     get_thread_summary,
     upsert_long_term_memories,
     upsert_thread_summary,
 )
-from index_docs import get_retriever
-from redis_store import RedisSemanticCache, RedisSessionManager
+from company_onboarding_assistant.services.index_docs import get_retriever
+from company_onboarding_assistant.services.redis_store import RedisSemanticCache, RedisSessionManager
 
 load_dotenv()
 
-groq_api_key = os.getenv("GROQ_API_KEY")
-llm = ChatGroq(groq_api_key=groq_api_key, model_name="openai/gpt-oss-120b")
+llm = ChatGroq(groq_api_key=settings.groq_api_key, model_name="openai/gpt-oss-120b")
 
 MAX_SHORT_TERM_TURNS = int(os.getenv("SHORT_TERM_MAX_TURNS", "10"))
 RETAINED_SHORT_TERM_TURNS = int(os.getenv("SHORT_TERM_RETAIN_TURNS", "4"))
@@ -105,7 +107,9 @@ def _count_turns(messages: list[dict[str, Any]]) -> int:
 
 
 def _build_memory_context(
-    rolling_summary: str, short_term_messages: list[dict[str, Any]], long_term_memories: list[str]
+    rolling_summary: str,
+    short_term_messages: list[dict[str, Any]],
+    long_term_memories: list[str],
 ) -> str:
     parts: list[str] = []
     if rolling_summary.strip():
@@ -259,9 +263,7 @@ def no_answer_found(state: State):
 
 @traceable(name="generate_from_context")
 def generate_from_context(state: State):
-    document_context = "\n\n---\n\n".join(
-        doc.page_content for doc in state.get("relevant_docs", [])
-    ).strip()
+    document_context = "\n\n---\n\n".join(doc.page_content for doc in state.get("relevant_docs", [])).strip()
     prompt = ChatPromptTemplate.from_messages(
         [
             (

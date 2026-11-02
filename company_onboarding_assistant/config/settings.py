@@ -1,0 +1,50 @@
+from __future__ import annotations
+
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+BASE_DIR = Path(__file__).resolve().parents[2]
+load_dotenv(BASE_DIR / ".env")
+
+
+def _resolve_path(raw_value: str | None, default: str) -> Path:
+    path = Path(raw_value or default)
+    if not path.is_absolute():
+        path = BASE_DIR / path
+    return path.resolve()
+
+
+class Settings:
+    project_root = BASE_DIR
+    docs_dir = _resolve_path(os.getenv("DOCS_FOLDER"), "documents")
+
+    groq_api_key = os.getenv("GROQ_API_KEY")
+
+    postgres_user = os.getenv("POSTGRES_USER", "rag_user")
+    postgres_password = os.getenv("POSTGRES_PASSWORD", "rag_password")
+    postgres_db = os.getenv("POSTGRES_DB", "rag_db")
+    db_port = os.getenv("DB_PORT", "5432")
+    database_url = os.getenv(
+        "DATABASE_URL",
+        f"postgresql://{postgres_user}:{postgres_password}@localhost:{db_port}/{postgres_db}",
+    )
+
+    qdrant_collection_name = os.getenv("QDRANT_COLLECTION_NAME", "ocr_chunks")
+    qdrant_url = os.getenv("QDRANT_URL", "http://localhost:6333")
+    qdrant_vector_dimension = int(os.getenv("QDRANT_VECTOR_DIMENSION", "384"))
+    qdrant_upsert_batch_size = int(os.getenv("QDRANT_UPSERT_BATCH_SIZE", "64"))
+
+    semantic_cache_threshold = float(os.getenv("SEMANTIC_CACHE_THRESHOLD", "0.88"))
+    semantic_cache_index = os.getenv("SEMANTIC_CACHE_INDEX", "idx:semantic_cache")
+    semantic_cache_prefix = os.getenv("SEMANTIC_CACHE_PREFIX", "semantic_cache:")
+    semantic_cache_embedding_model = os.getenv("SEMANTIC_CACHE_EMBEDDING_MODEL", "all-MiniLM-L6-v2")
+    semantic_cache_ttl_seconds = int(os.getenv("SEMANTIC_CACHE_TTL_SECONDS", "259200"))
+    redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    redis_session_ttl_seconds = int(os.getenv("REDIS_SESSION_TTL_SECONDS", "604800"))
+
+
+settings = Settings()
+
+__all__ = ["settings", "BASE_DIR"]

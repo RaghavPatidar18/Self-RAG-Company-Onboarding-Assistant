@@ -1,1 +1,0 @@
-from redis_store import RedisSemanticCache as SemanticCache

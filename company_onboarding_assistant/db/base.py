@@ -1,26 +1,18 @@
+from __future__ import annotations
+
 import hashlib
-import os
 from contextlib import contextmanager
 from typing import Iterator
 
 import psycopg
-from dotenv import load_dotenv
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 
-load_dotenv()
+from company_onboarding_assistant.config.settings import settings
 
-POSTGRES_USER = os.getenv("POSTGRES_USER")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
-POSTGRES_DB = os.getenv("POSTGRES_DB")
-DB_PORT = os.getenv("DB_PORT")
 
-DB_URI = os.getenv(
-    "DATABASE_URL",
-    f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost:{DB_PORT}/{POSTGRES_DB}",
-)
-
-db_pool = ConnectionPool(conninfo=DB_URI, max_size=20, kwargs={"row_factory": dict_row})
+db_pool = ConnectionPool(conninfo=settings.database_url, max_size=20, kwargs={"row_factory": dict_row})
+DB_URI = settings.database_url
 
 
 @contextmanager
@@ -29,7 +21,7 @@ def get_db_connection() -> Iterator[psycopg.Connection]:
         yield conn
 
 
-def init_db():
+def init_db() -> None:
     """Initialize durable application tables."""
     with get_db_connection() as conn:
         with conn.cursor() as cur:
@@ -43,7 +35,6 @@ def init_db():
                 )
                 """
             )
-            # Repair older databases created before activity timestamps were introduced.
             cur.execute(
                 """
                 ALTER TABLE chat_threads
@@ -102,7 +93,7 @@ def init_db():
         conn.commit()
 
 
-def create_thread(thread_id: str, title: str):
+def create_thread(thread_id: str, title: str) -> None:
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -117,7 +108,7 @@ def create_thread(thread_id: str, title: str):
         conn.commit()
 
 
-def update_thread_title(thread_id: str, title: str):
+def update_thread_title(thread_id: str, title: str) -> None:
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -137,7 +128,7 @@ def get_all_threads():
     return [(row["thread_id"], row["title"]) for row in rows]
 
 
-def add_message(thread_id: str, role: str, content: str):
+def add_message(thread_id: str, role: str, content: str) -> None:
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -182,7 +173,7 @@ def get_thread_summary(thread_id: str) -> dict:
     return row or {"summary": "", "summarized_turns": 0}
 
 
-def upsert_thread_summary(thread_id: str, summary: str, summarized_turns: int):
+def upsert_thread_summary(thread_id: str, summary: str, summarized_turns: int) -> None:
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -222,7 +213,7 @@ def _memory_hash(memory_text: str) -> str:
     return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
 
-def upsert_long_term_memories(user_id: str, memories: list[str], source_thread_id: str):
+def upsert_long_term_memories(user_id: str, memories: list[str], source_thread_id: str) -> None:
     cleaned_memories = [memory.strip() for memory in memories if memory and memory.strip()]
     if not cleaned_memories:
         return

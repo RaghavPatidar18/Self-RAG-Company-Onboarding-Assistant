@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import time
-import hashlib
 from dataclasses import dataclass
 from typing import Any
 
@@ -16,6 +16,8 @@ from redis.commands.search.index_definition import IndexDefinition, IndexType
 from redis.commands.search.query import Query
 from redis.exceptions import ResponseError
 
+from company_onboarding_assistant.config.settings import settings
+
 load_dotenv()
 
 
@@ -27,9 +29,8 @@ class CacheHit:
 
 class RedisSessionManager:
     def __init__(self):
-        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-        self.ttl_seconds = int(os.getenv("REDIS_SESSION_TTL_SECONDS", "604800"))
-        self.client = redis.Redis.from_url(redis_url, decode_responses=True)
+        self.ttl_seconds = settings.redis_session_ttl_seconds
+        self.client = redis.Redis.from_url(settings.redis_url, decode_responses=True)
 
     def _key(self, thread_id: str) -> str:
         return f"session:{thread_id}:messages"
@@ -73,16 +74,13 @@ class RedisSessionManager:
 class RedisSemanticCache:
     def __init__(self, threshold: float = 0.88):
         self.min_similarity = threshold
-        self.index_name = os.getenv("SEMANTIC_CACHE_INDEX", "idx:semantic_cache")
-        self.key_prefix = os.getenv("SEMANTIC_CACHE_PREFIX", "semantic_cache:")
-        self.embedding_model = os.getenv("SEMANTIC_CACHE_EMBEDDING_MODEL", "all-MiniLM-L6-v2")
-        self.ttl_seconds = int(os.getenv("SEMANTIC_CACHE_TTL_SECONDS", "259200"))
-        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-
-        self.client = redis.Redis.from_url(redis_url, decode_responses=False)
+        self.index_name = settings.semantic_cache_index
+        self.key_prefix = settings.semantic_cache_prefix
+        self.embedding_model = settings.semantic_cache_embedding_model
+        self.ttl_seconds = settings.semantic_cache_ttl_seconds
+        self.client = redis.Redis.from_url(settings.redis_url, decode_responses=False)
         self.encoder = HuggingFaceEmbeddings(model_name=self.embedding_model)
-        # probe_vector = self.encoder.embed_query("semantic-cache-probe")
-        self.vector_dim = 384 
+        self.vector_dim = 384
         self._ensure_index()
 
     def _ensure_index(self) -> None:
@@ -121,11 +119,13 @@ class RedisSemanticCache:
 
     def get(self, query: str) -> CacheHit | None:
         vector = self._embedding_bytes(query)
-        knn = Query("*=>[KNN 1 @embedding $vector AS distance]") \
-            .sort_by("distance") \
-            .return_fields("response_text", "distance") \
-            .paging(0, 1) \
+        knn = (
+            Query("*=>[KNN 1 @embedding $vector AS distance]")
+            .sort_by("distance")
+            .return_fields("response_text", "distance")
+            .paging(0, 1)
             .dialect(2)
+        )
 
         result = self.client.ft(self.index_name).search(knn, query_params={"vector": vector})
         if not result.docs:
