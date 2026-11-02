@@ -198,6 +198,8 @@ Put PDF/TXT/PPTX files in `./documents/`.
 streamlit run app.py
 ```
 
+The app opens at `http://localhost:8501` by default. Use **Evaluation Dashboard** in Streamlit's sidebar to view the latest results, suite pass rates, run history, and failed-case details. Run an evaluation script first to populate the dashboard; it reads timestamped JSON reports from `evals/results/<suite>/`.
+
 ### 6. Build retrieval index
 In sidebar, click **Index Documents Here**.
 

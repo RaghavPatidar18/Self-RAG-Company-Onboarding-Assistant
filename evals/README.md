@@ -1,6 +1,6 @@
 # LLM-as-judge evaluations
 
-The scripts under `eval_scripts/application` evaluate assistant scope, toxicity, and disclosure behavior. The component scripts evaluate handbook retrieval and answer generation. Application and generator suites invoke the production LangGraph; retrieval invokes the production Qdrant retriever. Each suite uses the corresponding JSON golden file in `eval_dataset` and writes per-case responses, judge reasons, and pass/fail results to a timestamped file in `evals/results/<suite>/`. Each execution gets a unique filename, so prior runs remain intact.
+The scripts under `eval_scripts/application` evaluate assistant scope, toxicity, and disclosure behavior. The component scripts evaluate handbook retrieval and answer generation. Application and generator suites invoke the production LangGraph; retrieval invokes the production Qdrant retriever. Each suite uses the corresponding JSON golden file in `eval_dataset` and writes per-case responses, judge reasons, pass/fail results, and a snapshot of retrieval/application/judge settings to a timestamped file in `evals/results/<suite>/`. Each execution gets a unique filename, so prior runs remain intact.
 
 ## Judge design and acceptance
 

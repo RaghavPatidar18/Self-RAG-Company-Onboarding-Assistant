@@ -41,6 +41,29 @@ def load_cases(name: str) -> list[dict[str, Any]]:
     return json.loads((ROOT / "evals" / "eval_dataset" / name).read_text())
 
 
+def evaluation_configuration() -> dict[str, Any]:
+    """Capture settings used for this run so reports remain comparable later."""
+    return {
+        "retrieval": {
+            "chunk_size": settings.document_chunk_size,
+            "chunk_overlap": settings.document_chunk_overlap,
+            "top_k": settings.retriever_top_k,
+            "embedding_model": settings.embedding_model,
+            "qdrant_collection": settings.qdrant_collection_name,
+        },
+        "application": {
+            "groq_model": settings.groq_model,
+            "max_answer_retries": settings.max_answer_retries,
+            "max_retrieval_rewrites": settings.max_retrieval_rewrites,
+        },
+        "judge": {
+            "groq_model": settings.eval_groq_model,
+            "temperature": settings.eval_groq_temperature,
+            "max_retries": settings.eval_groq_max_retries,
+        },
+    }
+
+
 def report(name: str, results: list[dict[str, Any]]) -> int:
     passed = sum(bool(item["pass"]) for item in results)
     output = ROOT / "evals" / "results" / name
@@ -52,7 +75,8 @@ def report(name: str, results: list[dict[str, Any]]) -> int:
     while path.exists():
         path = output / f"{name}_{timestamp}_{suffix}.json"
         suffix += 1
-    path.write_text(json.dumps({"suite": name, "model": MODEL, "passed": passed,
+    path.write_text(json.dumps({"suite": name, "model": MODEL,
+                                "hyperparameters": evaluation_configuration(), "passed": passed,
                                 "total": len(results), "results": results}, indent=2) + "\n")
     print(f"{name}: {passed}/{len(results)} passed; report: {path}")
     for row in results:
