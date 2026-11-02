@@ -1,0 +1,98 @@
+{
+  "suite": "generator",
+  "model": "openai/gpt-oss-120b",
+  "passed": 14,
+  "total": 15,
+  "results": [
+    {
+      "id": "1",
+      "pass": false,
+      "reason": "The response declines to provide the mission statement instead of directly answering with the required facts.",
+      "response": "I could not find a grounded answer in the current knowledge base. Please add more company-specific material or rephrase the question."
+    },
+    {
+      "id": "2",
+      "pass": true,
+      "reason": "The answer correctly identifies David Chen as the Chief Revenue Officer, matching the ideal context.",
+      "response": "The Chief Revenue Officer (CRO) is **David\u202fChen**."
+    },
+    {
+      "id": "3",
+      "pass": true,
+      "reason": "The answer correctly states Rust for the backend and Python\u202f3.11 for orchestration, matching the ideal context without contradictions.",
+      "response": "LuminaCore\u2019s backend is built with **Rust**, which handles high\u2011performance data ingestion.  \nThe orchestration layer is written in **Python\u202f3.11**.  \n\nIn addition, the platform\u2019s data pipelines use **Apache Kafka** for streaming and **PostgreSQL** for state storage, but the core backend and orchestration technologies themselves are Rust and Python\u202f3.11."
+    },
+    {
+      "id": "4",
+      "pass": true,
+      "reason": "The answer directly states the $5,000 per month per production environment cost as specified in the ideal context.",
+      "response": "LuminaGuard is sold as a **flat\u2011fee add\u2011on** to LuminaCore:\n\n- **$5,000\u202fper month for each production environment** where you enable the module.  \n\n(That fee is separate from the seat\u2011based licensing that applies to the core LuminaCore platform.)"
+    },
+    {
+      "id": "5",
+      "pass": true,
+      "reason": "The answer includes all required steps\u2014critical event, email report, 4\u2011hour deadline, and MDM wipe\u2014without contradictions or extra claims.",
+      "response": "**Procedure for a Stolen Company\u2011Issued Laptop (as stated in the provided context)**  \n\n1. **Recognize the incident as a critical security event.**  \n2. **Report the loss or theft** to **sec\u2011ops@luminatech.com**.  \n3. **Report must be made within\u202f4\u202fhours** of discovering the incident.  \n4. The report triggers the **remote Mobile Device Management (MDM) wiping protocol**.  \n\nNo additional steps are mentioned in the given context."
+    },
+    {
+      "id": "6",
+      "pass": true,
+      "reason": "The answer correctly identifies Cisco Secure Client as the required VPN software and matches the ideal context without contradictions.",
+      "response": "The required VPN software is **Cisco Secure Client** \u2013 it\u2019s pre\u2011installed on all machines and must be connected in order to reach internal Confluence wikis (as well as staging environments and Jenkins build servers)."
+    },
+    {
+      "id": "7",
+      "pass": true,
+      "reason": "The answer includes the exact time, duration, and required three\u2011point format without contradictions.",
+      "response": "The daily stand\u2011up has a set, mandatory structure:\n\n1. **What I did yesterday** \u2013 brief recap of yesterday\u2019s work.  \n2. **What I\u2019m doing today** \u2013 the focus for the current day.  \n3. **Blockers** \u2013 any impediments that need help or escalation.\n\nThe meeting is limited to **15\u202fminutes**, held **10:00\u202fAM local time** for your squad. Stick to this three\u2011point format each day to keep the stand\u2011up concise and effective."
+    },
+    {
+      "id": "8",
+      "pass": true,
+      "reason": "The answer correctly states the rollback triggers when error rates exceed 5% within 15 minutes of deployment, matching the ideal context.",
+      "response": "The system will automatically trigger a deployment rollback **if the error rate rises by more than\u202f5\u202f% within the first\u202f15\u202fminutes after a deployment**. At that point the prepared automated rollback script is executed."
+    },
+    {
+      "id": "9",
+      "pass": true,
+      "reason": "The answer fully matches the definition, impact, response time, status updates, and escalation details from the ideal context.",
+      "response": "**Sev0 (Severity\u202f0) \u2013 Definition**\n\n- **Scope of impact:** A total platform outage or a massive data\u2011breach event.  \n- **Service effect:** Core services are completely unavailable to **all** clients.  \n- **Response expectations:**  \n  - **Initial response:** Within **5\u202fminutes** of detection.  \n  - **Communication cadence:** The public status page is updated **every 15\u202fminutes**.  \n  - **Escalation:** The executive team is notified **immediately**.\n\nIn short, a Sev0 incident is the most critical situation where the entire platform is down or a severe data breach occurs, affecting every customer, and it triggers the fastest response and highest\u2011level communications."
+    },
+    {
+      "id": "10",
+      "pass": true,
+      "reason": "The answer directly provides the 16\u2011week fully paid leave, 90\u2011day eligibility, and applicable situations, matching the ideal context without contradictions.",
+      "response": "**Parental Leave for Primary Caregivers**\n\n- **Duration:** 16\u202fweeks of fully paid leave.  \n- **Eligibility:** Employees must have completed **90\u202fdays of continuous employment**.  \n- **Applicable Situations:** The leave can be used for the birth of a child, adoption, or foster placement.  \n\nSo, if you are the primary caregiver, you\u2019re entitled to 16 weeks of fully paid parental leave once you\u2019ve met the 90\u2011day employment requirement."
+    },
+    {
+      "id": "11",
+      "pass": true,
+      "reason": "The answer directly states the required on\u2011site days (Tuesdays and Thursdays) and matches the remote\u2011optional days, aligning with the ideal context.",
+      "response": "Employees who live within\u202f50\u202fmiles of either the Austin, TX or London, UK office are required to be on\u2011site **on Tuesdays and Thursdays**.\u202fOn Mondays, Wednesdays, and Fridays they may work remotely (remote\u2011optional)."
+    },
+    {
+      "id": "12",
+      "pass": true,
+      "reason": "The response directly provides the correct $75 per diem for San Francisco, matching the ideal context without contradictions.",
+      "response": "The daily meal per diem for an employee traveling to **San\u202fFrancisco** is **$75 per day**."
+    },
+    {
+      "id": "13",
+      "pass": true,
+      "reason": "The answer lists all three items (annual bonuses, equity refresh grants, base salary adjustments) exactly as in the ideal context.",
+      "response": "During the Q3 comprehensive annual review (held in October), the company determines\u202f:\n\n- **Annual bonuses**  \n- **Equity refresh grants**  \n- **Base\u2011salary adjustments**"
+    },
+    {
+      "id": "14",
+      "pass": true,
+      "reason": "The answer covers all listed focus areas and mentions reporting to the CTO without contradictions.",
+      "response": "The Principal Engineer (L5) focuses on:\n\n- **Strategic planning** for the organization and tackling the hardest technical\u2011debt challenges.  \n- **Next\u2011generation R&D**, driving research and development that defines the future direction of the company\u2019s technology.  \n- **Industry\u2011wide technical standards**, shaping and adopting standards that affect the broader market.  \n- **Company\u2011wide architecture**, establishing and overseeing the overall architectural vision across all product areas.  \n- **Organizational impact**, working directly with the CTO and influencing technology decisions at the enterprise level."
+    },
+    {
+      "id": "15",
+      "pass": true,
+      "reason": "The answer directly follows the ideal context, covering all required steps without contradictions.",
+      "response": "If you receive a suspicious email, do **not** click any links. Report it immediately by either:\n\n1. Using the **\u201cReport\u202fPhish\u201d** plugin in Gmail, **or**  \n2. Forwarding the email to **security@luminatech.com**."
+    }
+  ]
+}

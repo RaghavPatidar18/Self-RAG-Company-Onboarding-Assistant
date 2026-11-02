@@ -240,7 +240,7 @@ async def index_all_documents_async() -> int:
         return 0
 
     console.print(f"\n[bold]Chunking {len(all_docs)} section(s) into smaller pieces...[/]")
-    splitter = RecursiveCharacterTextSplitter(chunk_size=256, chunk_overlap=100)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=512, chunk_overlap=200)
     chunks = splitter.split_documents(all_docs)
 
     with console.status("[bold green]Upserting chunks into Qdrant..."):
@@ -252,7 +252,7 @@ def index_all_documents() -> int:
     return asyncio.run(index_all_documents_async())
 
 
-def get_retriever(k: int = 4):
+def get_retriever(k: int = 5):
     client = _build_sync_qdrant_client()
     try:
         if not _ensure_collection_exists(client):
