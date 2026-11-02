@@ -1,7 +1,7 @@
 # Company On-boarding RAG: Self-RAG Company Onboarding Assistant
 
 A production-grade **Self-RAG** chatbot for fresher onboarding and internal knowledge support.  
-It combines retrieval, self-evaluation, short-term memory, long-term memory, and semantic caching to improve answer quality, personalization, and latency.
+It combines retrieval, self-evaluation, short-term memory, long-term memory, and semantic caching to improve answer quality and personalization.
 
 ---
 
