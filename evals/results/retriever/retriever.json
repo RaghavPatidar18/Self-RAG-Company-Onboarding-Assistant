@@ -1,0 +1,653 @@
+{
+  "suite": "retriever",
+  "model": "openai/gpt-oss-120b",
+  "passed": 11,
+  "total": 15,
+  "results": [
+    {
+      "id": "1",
+      "pass": false,
+      "reason": "No retrieved chunk provides the four core values, so there is no direct evidence for the answer.",
+      "retrieved": [
+        {
+          "text": "Suite & Technical Architecture LuminaTech generates revenue through three core enterprise SaaS products It is mandatory for all employees, regardless of department, to understand the high-level architecture and value proposition of these platforms by the",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 2,
+            "score": 0.44791085
+          }
+        },
+        {
+          "text": "Features: Automated redaction of SSNs, credit card numbers, addresses, and custom regex- defined fields. Generates compliance audit for GDPR and CCPA Target Audience: Compliance Officers, CISOs, Legal Teams. Pricing Model: Flat fee add-on to LuminaCore at",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 3,
+            "score": 0.36558443
+          }
+        },
+        {
+          "text": "to understand the high-level architecture and value proposition of these platforms by the end of their second week. 2.1 LuminaCore (Flagship Product) LuminaCore is our enterprise data orchestration platform. It is designed to ingest data from legacy",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 2,
+            "score": 0.36293352
+          }
+        },
+        {
+          "text": "8.1 Data Classification Tiers All information at LuminaTech falls into one of four classifications. You are legally responsible for handling data according to its tier: 1. Public: Information cleared for external release. Examples: Marketing materials,",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 9,
+            "score": 0.36166224
+          }
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "pass": true,
+      "reason": "Chunk 1 directly states Dr. Aisha Rahman is the CISO located remotely in NY and matches the expected source page 2.",
+      "retrieved": [
+        {
+          "text": "Chief Technology Officer London, Product architecture, core engineering, Thorne (CTO) UK and AlI research: Dr. Aisha Chief Information Security Remote Data privacy, SOC 2 compliance, and Rahman Officer (CISO) (NY) threat mitigation. David Chen Chief",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 2,
+            "score": 0.67246234
+          }
+        },
+        {
+          "text": "Data privacy, SOC 2 compliance, and Rahman Officer (CISO) (NY) threat mitigation. David Chen Chief Revenue Officer (CRO) Austin; TX Global sales, enterprise partnerships, and marketing: Sarah Jenkins VP of People & Culture Austin; TX Human resources,",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 2,
+            "score": 0.6516763
+          }
+        },
+        {
+          "text": "Name Role Location Primary Focus Area Eleanor Chief Executive Officer Austin; TX Corporate strategy, investor relations, Vance (CEO) and overall vision_ Marcus Chief Technology Officer London, Product architecture, core engineering, Thorne (CTO) UK and AlI",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 2,
+            "score": 0.4423168
+          }
+        },
+        {
+          "text": "directly to the CTO. Focuses on next- generation R&D, industry-wide technical standards, and company-wide architecture. Chapter 8: Security & Data Compliance Framework As a B2B enterprise software provider handling our clients' most sensitive data",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 8,
+            "score": 0.4062593
+          }
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "pass": true,
+      "reason": "Chunk on page 2 provides the exact consumption\u2011based pricing details matching the expected answer and source.",
+      "retrieved": [
+        {
+          "text": "Audience: Compliance Officers, CISOs, Legal Teams. Pricing Model: Flat fee add-on to LuminaCore at $5,000 per month per production environment: Chapter 3: First Week & IT Systems Setup A smooth onboarding relies on getting your digital workspace",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 3,
+            "score": 0.7400589
+          }
+        },
+        {
+          "text": "Pricing Model: Consumption-based. Clients are billed $0.05 per Gigabyte (GB) of data ingested per month; with a minimum enterprise commit of $120,000 annually. 2.2 LuminaSync LuminaSync is our no-codelow-code Integration Platform as a Service (iPaaS)",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 2,
+            "score": 0.7149
+          }
+        },
+        {
+          "text": "to understand the high-level architecture and value proposition of these platforms by the end of their second week. 2.1 LuminaCore (Flagship Product) LuminaCore is our enterprise data orchestration platform. It is designed to ingest data from legacy",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 2,
+            "score": 0.65999484
+          }
+        },
+        {
+          "text": "Salesforce, Jira, SAP S/4HANA, Zendesk, and HubSpot Target Audience: RevOps, Marketing Operations, IT Administrators Pricing Model: Seat-based licensing: $150 per user/month; billed annually: 2.3 LuminaGuard LuminaGuard is an automated compliance and",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 3,
+            "score": 0.6213364
+          }
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "pass": false,
+      "reason": "No retrieved chunk lists the supported SaaS applications, and none are from the expected page 3 source.",
+      "retrieved": [
+        {
+          "text": "LuminaCore is our enterprise data orchestration platform. It is designed to ingest data from legacy on-premise servers and modern cloud databases simultaneously, creating a unified, real-time data lake: Tech Stack: Backend written in Rust for",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 2,
+            "score": 0.5945253
+          }
+        },
+        {
+          "text": "2.2 LuminaSync LuminaSync is our no-codelow-code Integration Platform as a Service (iPaaS) module. It allows business operators to map data fields between disparate SaaS tools without writing code LuminaTech Innovations 2 of 10 Page",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 2,
+            "score": 0.5594529
+          }
+        },
+        {
+          "text": "Integration Platform as a Service The market category for our LuminaSync product: PII Personally Identifiable Sensitive user data targeted by LuminaGuard. Information Bastion Bastion Host The secure, logged server used to access production data. End of",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 10,
+            "score": 0.5363815
+          }
+        },
+        {
+          "text": "to understand the high-level architecture and value proposition of these platforms by the end of their second week. 2.1 LuminaCore (Flagship Product) LuminaCore is our enterprise data orchestration platform. It is designed to ingest data from legacy",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 2,
+            "score": 0.50153565
+          }
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "pass": false,
+      "reason": "No retrieved chunk explicitly states the Sales department's standard issue device (Lenovo ThinkPad X1 Carbon) and its 4\u2011year refresh cycle.",
+      "retrieved": [
+        {
+          "text": "within the first 48 hours of employment; 3.1 Hardware Policies Hardware allocations are strictly determined by departmental needs to ensure optimal performance and cost efficiency: Department Standard Issue Device Peripherals Provided Refresh Cycle",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 3,
+            "score": 0.593343
+          }
+        },
+        {
+          "text": "and cost efficiency: Department Standard Issue Device Peripherals Provided Refresh Cycle Engineering; Apple MacBook Pro (M3 Max; 2x 27\" 4K Monitors, Magic Every 3 Product, Design 32GB RAM, 1TB SSD) Keyboard/Mouse, YubiKey 5C Sales, Marketing; Lenovo",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 3,
+            "score": 0.4453258
+          }
+        },
+        {
+          "text": "special handling required. 2. Internal: Standard operational data. Examples: All-hands presentation slides, general Slack channel conversations, internal process wikis. not be shared outside the company without an NDA 3. Confidential: Sensitive business",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 9,
+            "score": 0.4042596
+          }
+        },
+        {
+          "text": "(Read-only for most users) #eng-general or #sales-general Your primary departmental hub. #incidents-sev1 Used exclusively for critical system outages. Do NOT post casual questions here. #ask-it For all technical support requests, hardware issues, and",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 4,
+            "score": 0.39370334
+          }
+        }
+      ]
+    },
+    {
+      "id": "6",
+      "pass": true,
+      "reason": "Chunk 1 directly states SMS-based MFA is prohibited due to SIM\u2011swapping risks and its metadata matches the expected handbook page 4.",
+      "retrieved": [
+        {
+          "text": "immediately: Multi-Factor Authentication (MFA): MFA is non-negotiable. You must configure both your issued YubiKey and an Authenticator App (Google Authenticator 0r Authy) on mobile device. SMS-based MFA is strictly prohibited due to SIM-swapping risks.",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 4,
+            "score": 0.77574027
+          }
+        },
+        {
+          "text": "0r Authy) on mobile device. SMS-based MFA is strictly prohibited due to SIM-swapping risks. Virtual Private Network (VPN): Cisco Secure Client is pre-installed on all machines You must be connected to the VPN to access staging environments, Jenkins build",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 4,
+            "score": 0.6595196
+          }
+        },
+        {
+          "text": "management: Upon your start date, your initial credentials will be sent to the personal email address you provided to HR. You must reset this password immediately: Multi-Factor Authentication (MFA): MFA is non-negotiable. You must configure both your",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 4,
+            "score": 0.49093223
+          }
+        },
+        {
+          "text": "3.2 Software and Access Management We operate a Zero Trust network architecture. Identity is the new perimeter: Single Sign-On (SSO): We use Okta for identity management: Upon your start date, your initial credentials will be sent to the personal email",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 4,
+            "score": 0.31063476
+          }
+        }
+      ]
+    },
+    {
+      "id": "7",
+      "pass": true,
+      "reason": "Chunk 2 on page 4 explicitly states #incidents-sev1 is used exclusively for critical system outages, matching the expected source.",
+      "retrieved": [
+        {
+          "text": "Channels (Slack) Slack is our digital headquarters. Please join the following default channels immediately: #announcements-g Lobal Company-wide news from leadership. (Read-only for most users) #eng-general or #sales-general Your primary departmental hub.",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 4,
+            "score": 0.55759084
+          }
+        },
+        {
+          "text": "(Read-only for most users) #eng-general or #sales-general Your primary departmental hub. #incidents-sev1 Used exclusively for critical system outages. Do NOT post casual questions here. #ask-it For all technical support requests, hardware issues, and",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 4,
+            "score": 0.49979
+          }
+        },
+        {
+          "text": "on all machines You must be connected to the VPN to access staging environments, Jenkins build servers, and internal Confluence wikis. 3.3 Communication Channels (Slack) Slack is our digital headquarters. Please join the following default channels",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 4,
+            "score": 0.4736583
+          }
+        },
+        {
+          "text": "Severity Definition Response Communication Cadence SLA Sevo Total platform outage or massive data 5 minutes Status page updated every 15 breach. Core services completely (24/7) mins. Exec team notified unavailable to all clients. immediately: Sev1 Critical",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 6,
+            "score": 0.3888204
+          }
+        }
+      ]
+    },
+    {
+      "id": "8",
+      "pass": true,
+      "reason": "Chunk 1 directly states the two senior engineer approvals requirement and its metadata matches the expected source and page",
+      "retrieved": [
+        {
+          "text": "3. When opening a Pull Request (PR), you must fill out the standard PR template linking to the JIRA ticket and detailing the testing steps. 4. Approval Policy: A PR requires a minimum oftwo (2) approvals from Senior Engineers (Level 4 or above) before it",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 5,
+            "score": 0.62188387
+          }
+        },
+        {
+          "text": "A PR requires a minimum oftwo (2) approvals from Senior Engineers (Level 4 or above) before it can be merged. Self-approvals are mechanically blocked by GitHub. Note on CI/CD: Our Jenkins pipeline will automatically fail any build where the total code",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 5,
+            "score": 0.61874425
+          }
+        },
+        {
+          "text": "PR Pull Request Request to merge new code; requires 2 approvals. WFA Work From Anywhere Our policy allowing 30 days of remote work globally. iPaaS Integration Platform as a Service The market category for our LuminaSync product: PII Personally",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 10,
+            "score": 0.47759247
+          }
+        },
+        {
+          "text": "4.22 Branching Strategy and Code Review We utilize a modified GitFlow strategy on GitHub Enterprise. 1. All new work is branched from main into a feature branch named feat/ JIRA 123-short description or bug/ JIRA-456-issue 2_ Developers must write unit",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 5,
+            "score": 0.31232098
+          }
+        }
+      ]
+    },
+    {
+      "id": "9",
+      "pass": true,
+      "reason": "Chunk 1 provides the exact policy details and has matching source metadata (page 5).",
+      "retrieved": [
+        {
+          "text": "between 10:00 AM and 2:00 PM EST: Friday Deployments: Friday deployments are colloquially known as \"Read-Only Fridays.' Deployments on Friday are strictly prohibited unless authorized in writing by the VP of Engineering or the CTO, typically reserved only",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 5,
+            "score": 0.68122554
+          }
+        },
+        {
+          "text": "deployments to production are tightly regulated Deployment Windows: Code is exclusively deployed to production environments on Tuesdays and Thursdays between 10:00 AM and 2:00 PM EST: Friday Deployments: Friday deployments are colloquially known as",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 5,
+            "score": 0.64940524
+          }
+        },
+        {
+          "text": "Thursdays. Mondays, Wednesdays, and Fridays are remote-optional. Fully Remote Employees: Employees hired outside the 50-mile radius are classified as Fully Remote. LuminaTech will fly fully remote employees to their closest regional office once per",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 7,
+            "score": 0.53210473
+          }
+        },
+        {
+          "text": "are detected by Snyk during the automated dependency scan. 4.3 Production Deployments Stability is our highest priority for enterprise clients. Therefore, deployments to production are tightly regulated Deployment Windows: Code is exclusively deployed to",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 5,
+            "score": 0.5081778
+          }
+        }
+      ]
+    },
+    {
+      "id": "10",
+      "pass": true,
+      "reason": "Chunk 4 on page 6 directly states a 15\u2011minute response SLA and status page updates every 30 minutes, matching the expected answer and source.",
+      "retrieved": [
+        {
+          "text": "Severity Definition Response Communication Cadence SLA Sevo Total platform outage or massive data 5 minutes Status page updated every 15 breach. Core services completely (24/7) mins. Exec team notified unavailable to all clients. immediately: Sev1 Critical",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 6,
+            "score": 0.7124618
+          }
+        },
+        {
+          "text": "(Read-only for most users) #eng-general or #sales-general Your primary departmental hub. #incidents-sev1 Used exclusively for critical system outages. Do NOT post casual questions here. #ask-it For all technical support requests, hardware issues, and",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 4,
+            "score": 0.47271952
+          }
+        },
+        {
+          "text": "24 hours Tracked via standard JIRA incident affecting a single user. backlog: 5.2 The Post-Mortem Process Following the resolution of any Sevo or Sev1 incident; a Post-Mortem document must be completed within 72 hours. We practice Blameless Post-Mortems",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 6,
+            "score": 0.4446875
+          }
+        },
+        {
+          "text": "completely (24/7) mins. Exec team notified unavailable to all clients. immediately: Sev1 Critical feature broken for multiple 15 minutes Status page updated every 30 clients (e.g-, LuminaCore ingestion (24/7) mins. Client Success managers failing), no",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 6,
+            "score": 0.4374628
+          }
+        }
+      ]
+    },
+    {
+      "id": "11",
+      "pass": true,
+      "reason": "Chunk 1 directly states 21 days accrued, up to 5 days roll\u2011over, max balance 26 days, and its metadata matches the expected handbook page 6.",
+      "retrieved": [
+        {
+          "text": "for long-term productivity and mental health_ Paid Time Off (PTO): All full-time employees accrue 21 days of PTO per calendar year. Up to 5 days of unused PTO may be rolled over to the following year: PTO balances max outat 26 Sick Leave: Employees",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 6,
+            "score": 0.77268267
+          }
+        },
+        {
+          "text": "PTO may be rolled over to the following year: PTO balances max outat 26 Sick Leave: Employees receive 10 days of paid sick leave annually. Sick leave does not roll over: If you are sick for more than 3 consecutive HR may request a doctor's note: Parental",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 6,
+            "score": 0.6731748
+          }
+        },
+        {
+          "text": "generous benefits and flexibility, and in return, we expect high performance and accountability. 6.1 Paid Time Off and Leaves Time away from work is essential for long-term productivity and mental health_ Paid Time Off (PTO): All full-time employees",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 6,
+            "score": 0.6490543
+          }
+        },
+        {
+          "text": "Holidays: LuminaTech observes 11 standard local public holidays based on your primary office location (US or UK calendars). Requesting PTO: PTO request exceeding 3 consecutive must be submitted into Workday at least two weeks in advance and approved by",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 7,
+            "score": 0.44198692
+          }
+        }
+      ]
+    },
+    {
+      "id": "12",
+      "pass": false,
+      "reason": "No retrieved chunk fully provides the required approval detail, so the key answer isn\u2019t completely evidenced despite matching source metadata.",
+      "retrieved": [
+        {
+          "text": "Anywhere (WFA) Policy: To support global travel and family visits, any employee may work from an alternative geographic location for up to thirty (30) per calendar year. You must maintain at least a 4-hour working overlap with US Central Time (CT) and",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 7,
+            "score": 0.6784121
+          }
+        },
+        {
+          "text": "Fully Remote. LuminaTech will fly fully remote employees to their closest regional office once per quarter for planning and team building: Work From Anywhere (WFA) Policy: To support global travel and family visits, any employee may work from an",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 7,
+            "score": 0.5000529
+          }
+        },
+        {
+          "text": "PR Pull Request Request to merge new code; requires 2 approvals. WFA Work From Anywhere Our policy allowing 30 days of remote work globally. iPaaS Integration Platform as a Service The market category for our LuminaSync product: PII Personally",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 10,
+            "score": 0.4246727
+          }
+        },
+        {
+          "text": "HR and medical records. 8.2 Security Protocols & Enforcement Violation of Restricted data handling policies is grounds for immediate termination. Production Access: Engineers must NEVER download Restricted data Or production database dumps to their local",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 9,
+            "score": 0.41815954
+          }
+        }
+      ]
+    },
+    {
+      "id": "13",
+      "pass": true,
+      "reason": "Chunk 3 directly lists L3 responsibilities (lead complex features, mentor L1/L2, contribute to architecture and code review) and includes matching source metadata (LuminaTech Comprehensive Employee Handbook.pdf, page 8).",
+      "retrieved": [
+        {
+          "text": "L1/L2 engineers. Expected to contribute significantly to system architecture and code review: L4 (Staff): Cross-team impact. Sets technical direction for a product area all of LuminaSync) Deeply involved in strategic planning and resolving the hardest",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 8,
+            "score": 0.58249605
+          }
+        },
+        {
+          "text": "Guide Engineering and Product follow a standardized leveling track to ensure pay equity and clear promotion criteria. L1 (Associate): Entry-level. Focuses on learning the codebase; resolving minor (Sev3), and executing defined tasks with heavy guidance.",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 8,
+            "score": 0.55987924
+          }
+        },
+        {
+          "text": "designing and implementing standard features. Requires minimal oversight for day-to-day coding: L3 (Senior): Leads complex feature development: Mentors L1/L2 engineers. Expected to contribute significantly to system architecture and code review: L4",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 8,
+            "score": 0.51442516
+          }
+        },
+        {
+          "text": "1:1 meetings (minimum 30 minutes) with their direct reports to discuss blockers, career growth, and immediate feedback: 7.2 The Engineering Leveling Guide Engineering and Product follow a standardized leveling track to ensure pay equity and clear",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 8,
+            "score": 0.50408304
+          }
+        }
+      ]
+    },
+    {
+      "id": "14",
+      "pass": true,
+      "reason": "Chunk 1 directly lists the three Restricted data examples and matches the expected handbook page",
+      "retrieved": [
+        {
+          "text": "information with legal compliance implications. Examples: Customer PII (Personally Identifiable Information), production database credentials, employee HR and medical records. 8.2 Security Protocols & Enforcement Violation of Restricted data handling",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 9,
+            "score": 0.573326
+          }
+        },
+        {
+          "text": "8.1 Data Classification Tiers All information at LuminaTech falls into one of four classifications. You are legally responsible for handling data according to its tier: 1. Public: Information cleared for external release. Examples: Marketing materials,",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 9,
+            "score": 0.5588212
+          }
+        },
+        {
+          "text": "special handling required. 2. Internal: Standard operational data. Examples: All-hands presentation slides, general Slack channel conversations, internal process wikis. not be shared outside the company without an NDA 3. Confidential: Sensitive business",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 9,
+            "score": 0.46849793
+          }
+        },
+        {
+          "text": "projections, pre-release product designs, strategic M&A plans. Must be stored in encrypted, access-controlled repositories. 4. Restricted: Highly sensitive information with legal compliance implications. Examples: Customer PII (Personally Identifiable",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 9,
+            "score": 0.45626748
+          }
+        }
+      ]
+    },
+    {
+      "id": "15",
+      "pass": true,
+      "reason": "Chunk 1 directly states the $2,000 annual ERG budget and includes matching source metadata (Handbook, page 10).",
+      "retrieved": [
+        {
+          "text": "are granted a budget of $2,000 annually per ERG for events and speakers. Chapter 10: Glossary f Internal Acronyms To help you navigate internal documentation, please refer to this glossary of commonly used acronyms at LuminaTech: Acronym Meaning Context",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 10,
+            "score": 0.56095076
+          }
+        },
+        {
+          "text": "directly to HR, or anonymously via our third-party Whistleblower Hotline at 1-800-555-0199. 9.2 Employee Resource Groups (ERGs) We support self-organized employee groups to foster community and inclusion. Current active ERGs include: Women in Data:",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 10,
+            "score": 0.5309639
+          }
+        },
+        {
+          "text": "employee groups to foster community and inclusion. Current active ERGs include: Women in Data: Supporting female engineers and leaders. LuminaPride: Our LGBTQIA+ community and allies. Neurodiverse Innovators: A space for neurodivergent employees to share",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 10,
+            "score": 0.46199462
+          }
+        },
+        {
+          "text": "calendar year. You must maintain at least a 4-hour working overlap with US Central Time (CT) and secure written managerial approval at least 14 to travel: 6.3 Business Travel and Expenses LuminaTech reimburses employees for reasonable and necessary",
+          "metadata": {
+            "source": "LuminaTech Comprehensive Employee Handbook.pdf",
+            "file_type": "pdf",
+            "page": 7,
+            "score": 0.40316936
+          }
+        }
+      ]
+    }
+  ]
+}

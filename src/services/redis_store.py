@@ -16,7 +16,7 @@ from redis.commands.search.index_definition import IndexDefinition, IndexType
 from redis.commands.search.query import Query
 from redis.exceptions import ResponseError
 
-from company_onboarding_assistant.config.settings import settings
+from src.config.settings import settings
 
 load_dotenv()
 
@@ -72,15 +72,15 @@ class RedisSessionManager:
 
 
 class RedisSemanticCache:
-    def __init__(self, threshold: float = 0.88):
-        self.min_similarity = threshold
+    def __init__(self, threshold: float | None = None):
+        self.min_similarity = threshold if threshold is not None else settings.semantic_cache_threshold
         self.index_name = settings.semantic_cache_index
         self.key_prefix = settings.semantic_cache_prefix
         self.embedding_model = settings.semantic_cache_embedding_model
         self.ttl_seconds = settings.semantic_cache_ttl_seconds
         self.client = redis.Redis.from_url(settings.redis_url, decode_responses=False)
         self.encoder = HuggingFaceEmbeddings(model_name=self.embedding_model)
-        self.vector_dim = 384
+        self.vector_dim = settings.qdrant_vector_dimension
         self._ensure_index()
 
     def _ensure_index(self) -> None:

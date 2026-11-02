@@ -198,8 +198,14 @@ Put PDF/TXT/PPTX files in `./documents/`.
 streamlit run app.py
 ```
 
+The app opens at `http://localhost:8501` by default. Use **Evaluation Dashboard** in Streamlit's sidebar to view the latest results, suite pass rates, run history, and failed-case details. Run an evaluation script first to populate the dashboard; it reads timestamped JSON reports from `evals/results/<suite>/`.
+
 ### 6. Build retrieval index
 In sidebar, click **Index Documents Here**.
+
+### Logging
+
+The app writes timestamped logs to the terminal and a rotating `logs/app.log` file. Configure verbosity with `LOG_LEVEL` (`DEBUG`, `INFO`, `WARNING`, `ERROR`, or `CRITICAL`); set `LOG_FILE=` to disable the file handler. `LOG_MAX_BYTES` and `LOG_BACKUP_COUNT` control rotation. Chat prompts and answers are not included in application log messages.
 
 ---
 

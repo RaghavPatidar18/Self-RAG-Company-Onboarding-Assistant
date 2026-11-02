@@ -1,4 +1,8 @@
-from company_onboarding_assistant.ui.app import main
+from src.config.logging_utils import configure_logging
+
+configure_logging()
+
+from src.ui.app import main
 
 
 if __name__ == "__main__":

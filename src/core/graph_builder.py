@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import os
+import logging
 from typing import Any, Literal, TypedDict
 
-from dotenv import load_dotenv
 from langchain_core.documents import Document
 from langchain_core.messages import SystemMessage
 from langchain_core.prompts import ChatPromptTemplate
@@ -13,22 +12,22 @@ from langgraph.graph import END, START, StateGraph
 from langsmith import traceable
 from pydantic import BaseModel, Field
 
-from company_onboarding_assistant.config.settings import settings
-from company_onboarding_assistant.db.base import (
+from src.config.settings import settings
+from src.db.base import (
     get_long_term_memories,
     get_thread_summary,
     upsert_long_term_memories,
     upsert_thread_summary,
 )
-from company_onboarding_assistant.services.index_docs import get_retriever
-from company_onboarding_assistant.services.redis_store import RedisSemanticCache, RedisSessionManager
+from src.services.index_docs import get_retriever
+from src.services.redis_store import RedisSemanticCache, RedisSessionManager
 
-load_dotenv()
+logger = logging.getLogger(__name__)
 
-llm = ChatGroq(groq_api_key=settings.groq_api_key, model_name="openai/gpt-oss-120b")
+llm = ChatGroq(groq_api_key=settings.groq_api_key, model_name=settings.groq_model)
 
-MAX_SHORT_TERM_TURNS = int(os.getenv("SHORT_TERM_MAX_TURNS", "10"))
-RETAINED_SHORT_TERM_TURNS = int(os.getenv("SHORT_TERM_RETAIN_TURNS", "4"))
+MAX_SHORT_TERM_TURNS = settings.short_term_max_turns
+RETAINED_SHORT_TERM_TURNS = settings.short_term_retain_turns
 session_manager_singleton: RedisSessionManager | None = None
 semantic_cache_singleton: RedisSemanticCache | None = None
 
@@ -130,6 +129,7 @@ def hydrate_memory(state: State, config: RunnableConfig):
     try:
         short_term_messages = session_manager.get_messages(thread_id) if session_manager else []
     except Exception:
+        logger.warning("Could not read short-term session memory", exc_info=True)
         short_term_messages = []
 
     summary_row = get_thread_summary(thread_id)
@@ -156,6 +156,7 @@ def check_semantic_cache(state: State, config: RunnableConfig):
     try:
         hit = semantic_cache.get(state["question"]) if semantic_cache else None
     except Exception:
+        logger.warning("Semantic cache lookup failed; continuing without a cache hit", exc_info=True)
         hit = None
 
     if not hit:
@@ -312,7 +313,7 @@ Verify if the answer is strictly supported by the provided context.""",
 
 
 def route_after_issup(state: State):
-    if state.get("issup") == "fully_supported" or state.get("retries", 0) >= 3:
+    if state.get("issup") == "fully_supported" or state.get("retries", 0) >= settings.max_answer_retries:
         return "accept_answer"
     return "revise_answer"
 
@@ -360,7 +361,7 @@ Mark it useful only when it addresses the question clearly and actionably.""",
 def route_after_isuse(state: State):
     if state.get("isuse") == "useful":
         return "sync_session_memory"
-    if state.get("rewrite_tries", 0) >= 3:
+    if state.get("rewrite_tries", 0) >= settings.max_retrieval_rewrites:
         return "no_answer_found"
     return "rewrite_question"
 
@@ -443,7 +444,7 @@ Keep it concise, factual, and optimized for future prompting.""",
         try:
             session_manager.replace_messages(thread_id, updated_messages)
         except Exception:
-            pass
+            logger.warning("Could not persist short-term session memory", exc_info=True)
 
     memory_context = _build_memory_context(
         rolling_summary=rolling_summary,
@@ -524,7 +525,7 @@ def update_semantic_cache(state: State, config: RunnableConfig):
         try:
             semantic_cache_singleton.add(state["question"], answer, response_source="graph")
         except Exception:
-            pass
+            logger.warning("Could not update the semantic cache", exc_info=True)
     return {"response_source": state.get("response_source")}
 
 

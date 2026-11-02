@@ -1,16 +1,15 @@
-import os
+import logging
 import time
 import uuid
 
 import psycopg
 import streamlit as st
-from dotenv import load_dotenv
 from langgraph.checkpoint.postgres import PostgresSaver
 from psycopg_pool import ConnectionPool
 
-from company_onboarding_assistant.config.settings import settings
-from company_onboarding_assistant.core.graph_builder import build_graph
-from company_onboarding_assistant.db.base import (
+from src.config.settings import settings
+from src.core.graph_builder import build_graph
+from src.db.base import (
     DB_URI,
     add_message,
     create_thread,
@@ -19,27 +18,29 @@ from company_onboarding_assistant.db.base import (
     init_db,
     update_thread_title,
 )
-from company_onboarding_assistant.services.index_docs import index_all_documents
-from company_onboarding_assistant.services.redis_store import RedisSemanticCache, RedisSessionManager
+from src.services.index_docs import index_all_documents
+from src.services.redis_store import RedisSemanticCache, RedisSessionManager
+
+logger = logging.getLogger(__name__)
 
 
 def main():
     st.set_page_config(page_title="Company On-boarding RAG", layout="wide")
-    load_dotenv()
 
     @st.cache_resource
     def setup_environment():
+        logger.info("Initializing application services")
         init_db()
 
         with psycopg.connect(DB_URI, autocommit=True) as conn:
             PostgresSaver(conn).setup()
 
-        semantic_cache_threshold = float(os.getenv("SEMANTIC_CACHE_THRESHOLD", "0.88"))
         session_manager = RedisSessionManager()
-        semantic_cache = RedisSemanticCache(threshold=semantic_cache_threshold)
-        checkpoint_pool = ConnectionPool(conninfo=DB_URI, max_size=20)
+        semantic_cache = RedisSemanticCache()
+        checkpoint_pool = ConnectionPool(conninfo=DB_URI, max_size=settings.postgres_pool_max_size)
         checkpointer = PostgresSaver(checkpoint_pool)
         graph = build_graph(checkpointer, session_manager, semantic_cache)
+        logger.info("Application services initialized")
         return graph, session_manager, semantic_cache
 
     app, session_manager, semantic_cache = setup_environment()
@@ -126,18 +127,25 @@ def main():
         final_answer = ""
         cache_score = 0.0
         response_source = ""
+        request_started = time.perf_counter()
+        logger.info("Starting chat turn for thread %s", st.session_state.current_thread_id)
 
         with st.chat_message("assistant"):
             with st.status("Thinking...", expanded=True) as status:
-                for event in app.stream(initial_state, config=config, stream_mode="updates"):
-                    for node_name, state_update in event.items():
-                        st.write(f"Completed step: `{node_name}`")
-                        if state_update.get("cache_score"):
-                            cache_score = float(state_update["cache_score"])
-                        if state_update.get("response_source"):
-                            response_source = state_update["response_source"]
-                        if state_update.get("answer"):
-                            final_answer = state_update["answer"]
+                try:
+                    for event in app.stream(initial_state, config=config, stream_mode="updates"):
+                        for node_name, state_update in event.items():
+                            st.write(f"Completed step: `{node_name}`")
+                            if state_update.get("cache_score"):
+                                cache_score = float(state_update["cache_score"])
+                            if state_update.get("response_source"):
+                                response_source = state_update["response_source"]
+                            if state_update.get("answer"):
+                                final_answer = state_update["answer"]
+                except Exception:
+                    logger.exception("Chat turn failed for thread %s", st.session_state.current_thread_id)
+                    st.error("I couldn't complete that request. Please try again.")
+                    st.stop()
                 status.update(label="Complete", state="complete", expanded=False)
 
             if response_source == "semantic_cache" and cache_score:
@@ -150,6 +158,13 @@ def main():
                         time.sleep(0.02)
 
             st.write_stream(_stream_answer(final_answer))
+
+            logger.info(
+                "Completed chat turn for thread %s (source=%s, duration=%.2fs)",
+                st.session_state.current_thread_id,
+                response_source or "unknown",
+                time.perf_counter() - request_started,
+            )
 
         add_message(st.session_state.current_thread_id, "assistant", final_answer)
 
