@@ -15,48 +15,72 @@ The app is a **LangGraph state machine** with three memory layers:
 - **Semantic cache:** Redis vector-similarity answer cache for repeated/similar prompts
 
 ```text
-User Prompt
+User prompt (Streamlit)
    |
-   +--> [Semantic Cache Lookup (Redis)] -- hit --> return cached answer
-   |                                          
-   |-- miss --> LangGraph Pipeline ------------------------------------------+
-            [decide_retrieval]                                               |
-              |                                                               |
-              +--> [generate_direct]                                          |
-              |         |                                                     |
-              |         v                                                     |
-              |    [sync_session_memory] (Redis session + summary update)     |
-              |         |                                                     |
-              |         v                                                     |
-              |    [write_long_term_memory] (Postgres durable memory)         |
-              |         |                                                     |
-              |        END                                                    |
-              |
-              +--> [retrieve (Qdrant KB)] -> [is_relevant] -> [generate_from_context]
-                                                      |                |
-                                                      |                +-- uses:
-                                                      |                    - relevant docs
-                                                      |                    - short-term summary
-                                                      |                    - long-term user memory
-                                                      v
-                                                   [is_sup] -> [revise_answer] (max 3)
-                                                      |
-                                                   [is_use]
-                                                      |
-                                     +----------------+----------------+
-                                     |                                 |
-                                   useful                        not_useful
-                                     |                                 |
-                               [gen_summary]                     [rewrite_question]
-                                     |                                 |
-                               [gen_ltm] <--------------------- [retrieve retry]
-                                     |
-                                    END
+   v
+[input_disclosure_guard] -- protected extraction request --> [Return refusal] --+
+   | allowed request                                                           |
+   v                                                                           |
+[hydrate_memory] <--- recent turns from Redis                                   |
+   ^ <------------- rolling summary + user facts from PostgreSQL                |
+   |                                                                           |
+   v                                                                           |
+[check_semantic_cache] <--- Redis semantic vector cache                        |
+   |                                                                           |
+   +-- cache hit --> [Use cached answer] ---------------------------------------+
+   |                                                                           |
+   +-- cache miss --> [decide_retrieval]                                       |
+                         |                                                     |
+                         +-- no company knowledge --> [generate_direct] -------+
+                         |                                                     |
+                         +-- company knowledge needed                          |
+                               |                                               |
+                               v                                               |
+                         [retrieve] <-------------------------------+          |
+                               |                                    |          |
+                               v                                    |          |
+                      [Qdrant handbook KB]                          |          |
+                               |                                    |          |
+                               v                                    |          |
+                       [is_relevant]                                |          |
+                         |             |                            |          |
+            no relevant  |             | relevant chunks            |          |
+                         v             v                            |          |
+                [no_answer_found] [generate_from_context]            |          |
+                                       |                             |          |
+                                       v                             |          |
+                                  [is_sup]                           |          |
+                                    |   ^                           |          |
+                  revise if needed |   +-- [revise_answer]          |          |
+                                    v                               |          |
+                                  [is_use]                          |          |
+                                    |   |                           |          |
+                         useful     |   +-- not useful, retry left  |          |
+                                    |          |                    |          |
+                                    |          v                    |          |
+                                    |   [rewrite_question] ---------+          |
+                                    |                                          |
+                                    +-- useful --> [accept answer] ------------+
+                                    +-- retry limit --> [no_answer_found] ------+
+                                                                               |
+                   +-----------------------------------------------------------+
+                   v
+       [sync_session_memory: Redis turns + PostgreSQL rolling summary]
+                   |
+                   v
+       [write_long_term_memory] --> PostgreSQL user memories
+                   |
+                   v
+       [update_semantic_cache] --> Redis semantic vector cache
+                   |
+                   v
+             Return answer to Streamlit
 
-After successful generation:
-- answer is written to semantic cache
-- user/assistant messages are stored in Postgres chat tables
+Streamlit also saves the user prompt and final assistant answer to PostgreSQL
+chat history. A guarded refusal returns directly and bypasses memory/cache writes.
 ```
+
+The graph runs the disclosure guard before memory or cache access. A guarded refusal returns directly; other paths hydrate memory and check the semantic cache. Cache hits, direct answers, no-answer responses, and accepted RAG answers all pass through session synchronization, durable memory extraction, and semantic-cache update. The Streamlit UI separately writes the user prompt and final assistant response to the PostgreSQL chat-history tables.
 
 ---
 
