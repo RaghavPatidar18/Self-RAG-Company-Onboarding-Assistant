@@ -5,7 +5,9 @@ It combines retrieval, self-evaluation, short-term memory, long-term memory, and
 
 ---
 
-## Latest Architecture
+## Architecture Visuals
+
+![LangGraph RAG Assistant Workflow](<artifacts/LangGraph RAG Assistant Workflow.png>)
 
 The app is a **LangGraph state machine** with three memory layers:
 - **Short-term memory:** per-session turns in Redis plus a rolling Postgres summary once the session exceeds the turn threshold
