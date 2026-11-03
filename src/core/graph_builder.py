@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from typing import Any, Literal, TypedDict
 
 from langchain_core.documents import Document
@@ -32,7 +33,12 @@ PRIVACY_AND_DISCLOSURE_RULES = """Privacy and disclosure requirements:
 - When declining, keep the response brief and do not include any of the protected content in the refusal or alternative.
 """
 
-llm = ChatGroq(groq_api_key=settings.groq_api_key, model_name=settings.groq_model)
+_llm_options = {}
+if os.getenv("EVALUATION_MODE") == "1":
+    from src.config.eval_rate_limiter import get_eval_rate_limiter
+
+    _llm_options["rate_limiter"] = get_eval_rate_limiter()
+llm = ChatGroq(groq_api_key=settings.groq_api_key, model_name=settings.groq_model, **_llm_options)
 
 MAX_SHORT_TERM_TURNS = settings.short_term_max_turns
 RETAINED_SHORT_TERM_TURNS = settings.short_term_retain_turns

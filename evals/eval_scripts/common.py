@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import atexit
 import logging
+import os
 import re
 import time
 import uuid
@@ -19,6 +20,8 @@ from src.config.settings import settings
 
 ROOT = Path(__file__).resolve().parents[2]
 load_dotenv(ROOT / ".env")
+# The graph attaches the same limiter to its app model when it is created.
+os.environ["EVALUATION_MODE"] = "1"
 configure_logging()
 MODEL = settings.eval_groq_model
 logger = logging.getLogger("evals")
@@ -74,7 +77,14 @@ def _get_judge_model() -> ChatGroq:
         model=MODEL,
         temperature=settings.eval_groq_temperature,
         max_retries=0,
+        rate_limiter=_eval_rate_limiter(),
     )
+
+
+def _eval_rate_limiter():
+    from src.config.eval_rate_limiter import get_eval_rate_limiter
+
+    return get_eval_rate_limiter()
 
 
 def _retry_after_seconds(exc: Exception) -> float | None:
@@ -135,6 +145,7 @@ def evaluation_configuration() -> dict[str, Any]:
             "temperature": settings.eval_groq_temperature,
             "max_retries": settings.eval_groq_max_retries,
             "rate_limit_retries": settings.eval_rate_limit_max_retries,
+            "request_interval_seconds": settings.eval_request_interval_seconds,
         },
     }
 
