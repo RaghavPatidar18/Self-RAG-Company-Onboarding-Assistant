@@ -4,7 +4,9 @@ The scripts under `eval_scripts/application` evaluate assistant scope, toxicity,
 
 ## Judge design and acceptance
 
-Every judge prompt is task-specific and includes explicit pass/fail rules derived from the golden case's expected action or reference answer. The judge must emit a JSON object with a boolean `pass` and concise `reason`; malformed output stops the run instead of being silently counted. Evaluation calls use Groq with temperature 0 and a pinned default model (`openai/gpt-oss-120b`), configurable using `EVAL_GROQ_MODEL`. A suite passes only when every golden case passes. Temperature zero and fixed model reduce rerun variance, but hosted model updates can still change judgments; retain the result JSON and model name for comparisons.
+Every judge prompt is task-specific and includes explicit pass/fail rules derived from the golden case's expected action or reference answer. The judge must emit a JSON object with a boolean `pass` and concise `reason`; malformed output is recorded as a failed case. Evaluation calls use Groq with temperature 0 and a pinned default model (`openai/gpt-oss-120b`), configurable using `EVAL_GROQ_MODEL`. A suite passes only when every golden case passes. Temperature zero and fixed model reduce rerun variance, but hosted model updates can still change judgments; retain the result JSON and model name for comparisons.
+
+Each case is logged by suite and case ID. A case-level failure is recorded in the report and the next case continues. General Groq judge request failures retry up to `EVAL_GROQ_MAX_RETRIES`; rate limits use a separate backoff up to `EVAL_RATE_LIMIT_MAX_RETRIES`. Exhausted retries become a recorded failed case. App and judge Groq requests share an in-process limiter during evaluations; `EVAL_REQUEST_INTERVAL_SECONDS` controls the minimum interval (default 2.5 seconds). This smooths request volume but cannot guarantee staying below token-per-minute limits because request token sizes vary. The app graph, embedding cache, and evaluation thread/user IDs are initialized or isolated once per evaluation process to reduce repeated model initialization and cross-run memory contamination.
 
 ## Run
 
