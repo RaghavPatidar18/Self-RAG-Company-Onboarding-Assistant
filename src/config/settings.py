@@ -56,7 +56,8 @@ class Settings:
     postgres_pool_max_size = int(os.getenv("POSTGRES_POOL_MAX_SIZE", "20"))
     eval_groq_model = os.getenv("EVAL_GROQ_MODEL", groq_model)
     eval_groq_temperature = float(os.getenv("EVAL_GROQ_TEMPERATURE", "0"))
-    eval_groq_max_retries = int(os.getenv("EVAL_GROQ_MAX_RETRIES", "2"))
+    eval_groq_max_retries = int(os.getenv("EVAL_GROQ_MAX_RETRIES", "5"))
+    eval_rate_limit_max_retries = int(os.getenv("EVAL_RATE_LIMIT_MAX_RETRIES", "8"))
 
     log_level = os.getenv("LOG_LEVEL", "INFO").upper()
     log_file = os.getenv("LOG_FILE", "logs/app.log")
